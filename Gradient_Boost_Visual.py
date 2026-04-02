@@ -133,7 +133,7 @@ with right_col:
         plot_df["y_pred"]
     ) ** 0.5
 
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(6, 4.5))
 
     ax.scatter(
         plot_df["y_true"],
@@ -169,6 +169,7 @@ with right_col:
     )
 
     st.pyplot(fig)
+    fig.tight_layout()
 
 metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
 metric_col1.metric("Learning rate", selected_lr)
