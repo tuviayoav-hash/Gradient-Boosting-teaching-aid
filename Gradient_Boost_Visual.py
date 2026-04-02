@@ -6,6 +6,7 @@ import streamlit as st
 from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.metrics import mean_squared_error
 
 
 st.set_page_config(
@@ -13,18 +14,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# Hyper-parameters
 LEARNING_RATES = [0.05, 0.1, 0.3, 0.7, 0.9]
 MAX_DEPTHS = [1, 3, 6]
 ITERATION_POINTS = [1, 5, 10, 50, 100]
 
 
-# Save results in table
 @st.cache_data
 def build_results_table(split_seed: int) -> pd.DataFrame:
     X, y = load_diabetes(return_X_y=True)
-    
-  # Train-Test Split
+
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
@@ -36,7 +34,6 @@ def build_results_table(split_seed: int) -> pd.DataFrame:
     wanted = set(ITERATION_POINTS)
     max_estimators = max(ITERATION_POINTS)
 
-  # Main loop
     for lr in LEARNING_RATES:
         for depth in MAX_DEPTHS:
             model = GradientBoostingRegressor(
@@ -48,7 +45,6 @@ def build_results_table(split_seed: int) -> pd.DataFrame:
 
             model.fit(X_train, y_train)
 
-          # Extract prediction from specific stages of algo
             for i, y_pred_test in enumerate(model.staged_predict(X_test), start=1):
                 if i in wanted:
                     df_chunk = pd.DataFrame({
@@ -69,8 +65,6 @@ def build_results_table(split_seed: int) -> pd.DataFrame:
     return df
 
 
-
-# StreamLit interface
 if "split_seed" not in st.session_state:
     st.session_state.split_seed = 42
 
@@ -78,15 +72,15 @@ if "split_seed" not in st.session_state:
 st.title("Gradient Boosting Overfitting Demo")
 st.write(f"Current train/test split seed: **{st.session_state.split_seed}**")
 
-button_col, download_col = st.columns([2, 1])
+top_left, top_right = st.columns([2, 1])
 
-with button_col:
+with top_left:
     if st.button("Re-compute table with a new train/test split"):
         st.session_state.split_seed = random.randint(1, 10_000_000)
 
 df = build_results_table(st.session_state.split_seed)
 
-with download_col:
+with top_right:
     csv_data = df.to_csv(index=False).encode("utf-8")
     st.download_button(
         label="Download current table as CSV",
@@ -95,38 +89,51 @@ with download_col:
         mime="text/csv"
     )
 
-st.subheader("Controls and plot")
+# Fixed axis limits across all parameter choices
+global_min = min(df["y_true"].min(), df["y_pred"].min())
+global_max = max(df["y_true"].max(), df["y_pred"].max())
 
-left_col, center_col, right_col = st.columns([1.2, 5, 1.2])
+# Add a small margin so points are not on the edge
+margin = 0.05 * (global_max - global_min)
+axis_min = global_min - margin
+axis_max = global_max + margin
+
+left_col, right_col = st.columns([1.3, 4.7])
 
 with left_col:
+    st.subheader("Controls")
+
     selected_depth = st.radio(
         "Max depth",
         options=MAX_DEPTHS,
         index=MAX_DEPTHS.index(3)
     )
 
-with right_col:
     selected_lr = st.radio(
         "Learning rate",
         options=LEARNING_RATES,
         index=LEARNING_RATES.index(0.1)
     )
 
-with center_col:
-    selected_iter = st.select_slider(
+    selected_iter = st.radio(
         "Number of iterations",
         options=ITERATION_POINTS,
-        value=10
+        index=ITERATION_POINTS.index(10)
     )
 
+with right_col:
     plot_df = df[
         (df["learning_rate"] == selected_lr) &
         (df["max_depth"] == selected_depth) &
         (df["n_estimators"] == selected_iter)
     ].copy()
 
-    fig, ax = plt.subplots(figsize=(7, 5))
+    rmse = mean_squared_error(
+        plot_df["y_true"],
+        plot_df["y_pred"]
+    ) ** 0.5
+
+    fig, ax = plt.subplots(figsize=(8, 6))
 
     ax.scatter(
         plot_df["y_true"],
@@ -134,14 +141,31 @@ with center_col:
         alpha=0.7
     )
 
-    line_min = min(plot_df["y_true"].min(), plot_df["y_pred"].min())
-    line_max = max(plot_df["y_true"].max(), plot_df["y_pred"].max())
-    ax.plot([line_min, line_max], [line_min, line_max], linestyle="--")
+    # 45-degree reference line
+    ax.plot(
+        [axis_min, axis_max],
+        [axis_min, axis_max],
+        linestyle="--"
+    )
+
+    # Fixed scales
+    ax.set_xlim(axis_min, axis_max)
+    ax.set_ylim(axis_min, axis_max)
+    ax.set_aspect("equal", adjustable="box")
 
     ax.set_xlabel("Actual outcome")
     ax.set_ylabel("Predicted outcome")
     ax.set_title(
         f"Test subset | learning_rate={selected_lr}, max_depth={selected_depth}, iterations={selected_iter}"
+    )
+
+    # RMSE annotation inside plot
+    ax.text(
+        0.03, 0.97,
+        f"RMSE = {rmse:.2f}",
+        transform=ax.transAxes,
+        verticalalignment="top",
+        bbox=dict(boxstyle="round", facecolor="white", alpha=0.8)
     )
 
     st.pyplot(fig)
@@ -150,7 +174,7 @@ metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
 metric_col1.metric("Learning rate", selected_lr)
 metric_col2.metric("Max depth", selected_depth)
 metric_col3.metric("Iterations", selected_iter)
-metric_col4.metric("Test observations", len(plot_df))
+metric_col4.metric("RMSE", f"{rmse:.2f}")
 
 with st.expander("Show filtered data"):
     st.dataframe(plot_df, use_container_width=True)
