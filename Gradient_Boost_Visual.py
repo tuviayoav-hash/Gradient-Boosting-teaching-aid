@@ -95,55 +95,56 @@ with download_col:
         mime="text/csv"
     )
 
-st.subheader("Controls")
+st.subheader("Controls and plot")
 
-# Hyperparameters sliders 
-selected_iter = st.select_slider(
-    "Number of iterations",
-    options=ITERATION_POINTS,
-    value=10
-)
+left_col, center_col, right_col = st.columns([1.2, 5, 1.2])
 
-selected_depth = st.select_slider(
-    "Max depth",
-    options=MAX_DEPTHS,
-    value=3
-)
+with left_col:
+    selected_depth = st.radio(
+        "Max depth",
+        options=MAX_DEPTHS,
+        index=MAX_DEPTHS.index(3)
+    )
 
-selected_lr = st.select_slider(
-    "Learning rate",
-    options=LEARNING_RATES,
-    value=0.1
-)
+with right_col:
+    selected_lr = st.radio(
+        "Learning rate",
+        options=LEARNING_RATES,
+        index=LEARNING_RATES.index(0.1)
+    )
 
-# Scatter plot
-plot_df = df[
-    (df["learning_rate"] == selected_lr) &
-    (df["max_depth"] == selected_depth) &
-    (df["n_estimators"] == selected_iter)
-].copy()
+with center_col:
+    selected_iter = st.select_slider(
+        "Number of iterations",
+        options=ITERATION_POINTS,
+        value=10
+    )
 
-st.subheader("Scatter plot: actual outcome vs predicted outcome")
+    plot_df = df[
+        (df["learning_rate"] == selected_lr) &
+        (df["max_depth"] == selected_depth) &
+        (df["n_estimators"] == selected_iter)
+    ].copy()
 
-fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(7, 5))
 
-ax.scatter(
-    plot_df["y_true"],
-    plot_df["y_pred"],
-    alpha=0.7
-)
+    ax.scatter(
+        plot_df["y_true"],
+        plot_df["y_pred"],
+        alpha=0.7
+    )
 
-line_min = min(plot_df["y_true"].min(), plot_df["y_pred"].min())
-line_max = max(plot_df["y_true"].max(), plot_df["y_pred"].max())
-ax.plot([line_min, line_max], [line_min, line_max], linestyle="--")
+    line_min = min(plot_df["y_true"].min(), plot_df["y_pred"].min())
+    line_max = max(plot_df["y_true"].max(), plot_df["y_pred"].max())
+    ax.plot([line_min, line_max], [line_min, line_max], linestyle="--")
 
-ax.set_xlabel("Actual outcome")
-ax.set_ylabel("Predicted outcome")
-ax.set_title(
-    f"Test subset | learning_rate={selected_lr}, max_depth={selected_depth}, iterations={selected_iter}"
-)
+    ax.set_xlabel("Actual outcome")
+    ax.set_ylabel("Predicted outcome")
+    ax.set_title(
+        f"Test subset | learning_rate={selected_lr}, max_depth={selected_depth}, iterations={selected_iter}"
+    )
 
-st.pyplot(fig)
+    st.pyplot(fig)
 
 metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
 metric_col1.metric("Learning rate", selected_lr)
