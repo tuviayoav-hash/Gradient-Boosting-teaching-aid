@@ -133,7 +133,7 @@ with right_col:
         plot_df["y_pred"]
     ) ** 0.5
 
-    fig, ax = plt.subplots(figsize=(6, 4.5))
+    fig, ax = plt.subplots(figsize=(5.5, 4))
 
     ax.scatter(
         plot_df["y_true"],
