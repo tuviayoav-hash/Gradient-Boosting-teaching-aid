@@ -68,6 +68,9 @@ def build_results_table(split_seed: int) -> pd.DataFrame:
 if "split_seed" not in st.session_state:
     st.session_state.split_seed = 42
 
+if "layout_toggle" not in st.session_state:
+    st.session_state.layout_toggle = "Mobile"
+
 
 st.title("Gradient Boosting Overfitting Demo")
 st.write(f"Current train/test split seed: **{st.session_state.split_seed}**")
@@ -98,84 +101,127 @@ margin = 0.05 * (global_max - global_min)
 axis_min = global_min - margin
 axis_max = global_max + margin
 
-left_col, right_col = st.columns([1.3, 4.7])
+layout_choice = st.radio(
+    "Layout",
+    options=["Mobile", "Desktop"],
+    horizontal=True,
+    key="layout_toggle",
+)
 
-with left_col:
+mobile_layout = layout_choice == "Mobile"
+right_col = None
+
+if mobile_layout:
     st.subheader("Controls")
+    ctrl_depth, ctrl_lr, ctrl_iter = st.columns(3)
+    with ctrl_depth:
+        selected_depth = st.radio(
+            "Max depth",
+            options=MAX_DEPTHS,
+            index=MAX_DEPTHS.index(3),
+            key="gb_depth",
+        )
+    with ctrl_lr:
+        selected_lr = st.radio(
+            "Learning rate",
+            options=LEARNING_RATES,
+            index=LEARNING_RATES.index(0.1),
+            key="gb_lr",
+        )
+    with ctrl_iter:
+        selected_iter = st.radio(
+            "Number of iterations",
+            options=ITERATION_POINTS,
+            index=ITERATION_POINTS.index(10),
+            key="gb_iter",
+        )
+else:
+    left_col, right_col = st.columns([1.3, 4.7])
+    with left_col:
+        st.subheader("Controls")
+        selected_depth = st.radio(
+            "Max depth",
+            options=MAX_DEPTHS,
+            index=MAX_DEPTHS.index(3),
+            key="gb_depth",
+        )
+        selected_lr = st.radio(
+            "Learning rate",
+            options=LEARNING_RATES,
+            index=LEARNING_RATES.index(0.1),
+            key="gb_lr",
+        )
+        selected_iter = st.radio(
+            "Number of iterations",
+            options=ITERATION_POINTS,
+            index=ITERATION_POINTS.index(10),
+            key="gb_iter",
+        )
 
-    selected_depth = st.radio(
-        "Max depth",
-        options=MAX_DEPTHS,
-        index=MAX_DEPTHS.index(3)
-    )
+plot_df = df[
+    (df["learning_rate"] == selected_lr) &
+    (df["max_depth"] == selected_depth) &
+    (df["n_estimators"] == selected_iter)
+].copy()
 
-    selected_lr = st.radio(
-        "Learning rate",
-        options=LEARNING_RATES,
-        index=LEARNING_RATES.index(0.1)
-    )
+rmse = mean_squared_error(
+    plot_df["y_true"],
+    plot_df["y_pred"]
+) ** 0.5
 
-    selected_iter = st.radio(
-        "Number of iterations",
-        options=ITERATION_POINTS,
-        index=ITERATION_POINTS.index(10)
-    )
+fig, ax = plt.subplots(figsize=(5.5, 4))
 
-with right_col:
-    plot_df = df[
-        (df["learning_rate"] == selected_lr) &
-        (df["max_depth"] == selected_depth) &
-        (df["n_estimators"] == selected_iter)
-    ].copy()
+ax.scatter(
+    plot_df["y_true"],
+    plot_df["y_pred"],
+    alpha=0.7
+)
 
-    rmse = mean_squared_error(
-        plot_df["y_true"],
-        plot_df["y_pred"]
-    ) ** 0.5
+ax.plot(
+    [axis_min, axis_max],
+    [axis_min, axis_max],
+    linestyle="--"
+)
 
-    fig, ax = plt.subplots(figsize=(5.5, 4))
+ax.set_xlim(axis_min, axis_max)
+ax.set_ylim(axis_min, axis_max)
+ax.set_aspect("equal", adjustable="box")
 
-    ax.scatter(
-        plot_df["y_true"],
-        plot_df["y_pred"],
-        alpha=0.7
-    )
+ax.set_xlabel("Actual outcome")
+ax.set_ylabel("Predicted outcome")
+ax.set_title(
+    f"Test subset | learning_rate={selected_lr}, max_depth={selected_depth}, iterations={selected_iter}"
+)
 
-    # 45-degree reference line
-    ax.plot(
-        [axis_min, axis_max],
-        [axis_min, axis_max],
-        linestyle="--"
-    )
+ax.text(
+    0.03, 0.97,
+    f"RMSE = {rmse:.2f}",
+    transform=ax.transAxes,
+    verticalalignment="top",
+    bbox=dict(boxstyle="round", facecolor="white", alpha=0.8)
+)
 
-    # Fixed scales
-    ax.set_xlim(axis_min, axis_max)
-    ax.set_ylim(axis_min, axis_max)
-    ax.set_aspect("equal", adjustable="box")
+fig.tight_layout()
 
-    ax.set_xlabel("Actual outcome")
-    ax.set_ylabel("Predicted outcome")
-    ax.set_title(
-        f"Test subset | learning_rate={selected_lr}, max_depth={selected_depth}, iterations={selected_iter}"
-    )
+if mobile_layout:
+    st.pyplot(fig, use_container_width=True)
+else:
+    with right_col:
+        st.pyplot(fig, use_container_width=True)
 
-    # RMSE annotation inside plot
-    ax.text(
-        0.03, 0.97,
-        f"RMSE = {rmse:.2f}",
-        transform=ax.transAxes,
-        verticalalignment="top",
-        bbox=dict(boxstyle="round", facecolor="white", alpha=0.8)
-    )
-
-    st.pyplot(fig)
-    fig.tight_layout()
-
-metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
-metric_col1.metric("Learning rate", selected_lr)
-metric_col2.metric("Max depth", selected_depth)
-metric_col3.metric("Iterations", selected_iter)
-metric_col4.metric("RMSE", f"{rmse:.2f}")
+if mobile_layout:
+    m1, m2 = st.columns(2)
+    m1.metric("Learning rate", selected_lr)
+    m2.metric("Max depth", selected_depth)
+    m3, m4 = st.columns(2)
+    m3.metric("Iterations", selected_iter)
+    m4.metric("RMSE", f"{rmse:.2f}")
+else:
+    metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+    metric_col1.metric("Learning rate", selected_lr)
+    metric_col2.metric("Max depth", selected_depth)
+    metric_col3.metric("Iterations", selected_iter)
+    metric_col4.metric("RMSE", f"{rmse:.2f}")
 
 with st.expander("Show filtered data"):
     st.dataframe(plot_df, use_container_width=True)
