@@ -175,7 +175,7 @@ st.caption("Using full data may take much longer to compute, especially for larg
 
 if use_sampling == "Sample data (1K points)":
     X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=1000, seed=123)
-else if use_sampling == "Sample data (10k points)":
+elif use_sampling == "Sample data (10k points)":
     X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=10000, seed=123)
     if len(X) > 1000:
         st.warning("10K sampling is selected. This may take a while to compute.")
