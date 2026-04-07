@@ -115,23 +115,6 @@ def build_rmse_table(df_results: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame(rows).sort_values("rmse").reset_index(drop=True)
 
-## Buttons logic
-
-show_best = st.button("Show lowest RMSE setting")
-randomize_seed = st.button("Randomize train/test seed")
-
-if show_best:
-    best_row = rmse_table.loc[rmse_table["rmse"].idxmin()]
-    st.session_state["selected_lr"] = float(best_row["learning_rate"])
-    st.session_state["selected_depth"] = int(best_row["max_depth"])
-    st.session_state["selected_iter"] = int(best_row["n_estimators"])
-    st.rerun()
-
-if randomize_seed:
-    st.session_state.split_seed = random.randint(1, 10_000_000)
-    st.rerun()
-
-
 ## App itself
 st.set_page_config(
     page_title="Gradient Boosting Fitting Demo",
@@ -173,7 +156,25 @@ global_max = max(df["y_true"].max(), df["y_pred"].max())
 margin = 0.05 * (global_max - global_min)
 axis_min = global_min - margin
 axis_max = global_max + margin
-    
+
+
+btn_col1, btn_col2 = st.columns(2)
+# Jump to setting with lowest RMSE
+with btn_col1:
+    if st.button("Show lowest RMSE setting"):
+        best_row = rmse_table.loc[rmse_table["rmse"].idxmin()]
+        st.session_state["selected_lr"] = float(best_row["learning_rate"])
+        st.session_state["selected_depth"] = int(best_row["max_depth"])
+        st.session_state["selected_iter"] = int(best_row["n_estimators"])
+        st.rerun()
+
+# Randomize train-test split
+with btn_col2:
+    st.write(f"Current train/test split seed: **{st.session_state.split_seed}**")
+    if st.button("Randomize train/test seed"):
+        st.session_state.split_seed = random.randint(1, 1000)
+        st.rerun()
+
 # Controls
 if "selected_depth" not in st.session_state:
     st.session_state["selected_depth"] = 3
@@ -250,16 +251,6 @@ ax.text(
 ax.set_aspect("equal", adjustable="box")
 fig.tight_layout()
 st.pyplot(fig, use_container_width=False)
-
-# Buttons for reruns
-st.write("") 
-btn_col1, btn_col2 = st.columns(2)
-
-with btn_col1:
-    st.button("Show lowest RMSE setting", key="btn_show_best_ui")
-
-with btn_col2:
-    st.button("Randomize train/test seed", key="btn_random_seed_ui")
         
 ## Metadata
 st.divider()
