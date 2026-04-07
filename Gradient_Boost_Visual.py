@@ -156,20 +156,6 @@ global_max = max(df["y_true"].max(), df["y_pred"].max())
 margin = 0.05 * (global_max - global_min)
 axis_min = global_min - margin
 axis_max = global_max + margin
-
-# Jump to setting with lowest RMSE
-if st.button("Show lowest RMSE setting"):
-        best_row = rmse_table.loc[rmse_table["rmse"].idxmin()]
-        st.session_state["selected_lr"] = float(best_row["learning_rate"])
-        st.session_state["selected_depth"] = int(best_row["max_depth"])
-        st.session_state["selected_iter"] = int(best_row["n_estimators"])
-        st.rerun()
-
-# Randomize train-test split
-st.write(f"Current train/test split seed: **{st.session_state.split_seed}**")
-if st.button("Randomize train/test seed"):
-    st.session_state.split_seed = random.randint(1, 10_000_000)
-    st.rerun()
     
 # Controls
 if "selected_depth" not in st.session_state:
@@ -247,7 +233,24 @@ ax.text(
 ax.set_aspect("equal", adjustable="box")
 fig.tight_layout()
 st.pyplot(fig, use_container_width=False)
-    
+
+# Buttons for best RMSE settings and randomize seed
+st.write("")
+btn_col1, btn_col2 = st.columns(2)
+
+with btn_col1:
+    if st.button("Show lowest RMSE setting"):
+        best_row = rmse_table.loc[rmse_table["rmse"].idxmin()]
+        st.session_state["selected_lr"] = float(best_row["learning_rate"])
+        st.session_state["selected_depth"] = int(best_row["max_depth"])
+        st.session_state["selected_iter"] = int(best_row["n_estimators"])
+        st.rerun()
+
+with btn_col2:
+    if st.button("Randomize train/test seed"):
+        st.session_state.split_seed = random.randint(1, 10_000_000)
+        st.rerun()
+        
 ## Metadata
 st.divider()
 st.subheader("Dataset summary")
