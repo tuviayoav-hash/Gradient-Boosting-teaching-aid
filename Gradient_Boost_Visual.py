@@ -173,13 +173,14 @@ use_sampling = st.radio(
 
 st.caption("Using full data may take much longer to compute, especially for large datasets.")
 
-if use_sampling == "Sample data":
+if use_sampling == "Sample data (10K points)":
     X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=10000, seed=123)
 else:
     X_model, y_model = X, y
     if len(X) > 10000:
         st.warning("Full-data mode is selected. This may take a while to compute.")
 
+# build results
 df = build_results_table(st.session_state.split_seed, X_model, y_model)
 rmse_table = build_rmse_table(df)
 
