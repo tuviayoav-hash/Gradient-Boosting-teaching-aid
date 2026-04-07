@@ -163,21 +163,21 @@ with ctrl_depth:
     selected_depth = st.radio(
         "Max depth",
         options=MAX_DEPTHS,
-        key="gb_depth",
+        key="selected_depth",
         horizontal=True
     )
 with ctrl_lr:
     selected_lr = st.radio(
         "Learning rate",
         options=LEARNING_RATES,
-        key="gb_lr",
+        key="selected_lr",
         horizontal=True
     )
 with ctrl_iter:
     selected_iter = st.radio(
         "Number of iterations",
         options=ITERATION_POINTS,
-        key="gb_iter",
+        key="selected_iter",
         horizontal=True
     )
     
@@ -192,7 +192,7 @@ rmse = mean_squared_error(
     plot_df["y_pred"]
 ) ** 0.5
 
-fig, ax = plt.subplots(figsize=(5.2, 3.8), dpi=100)
+fig, ax = plt.subplots(figsize=(4, 3), dpi=100)
 
 ax.scatter(
     plot_df["y_true"],
