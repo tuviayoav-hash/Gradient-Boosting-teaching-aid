@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
 
-from sklearn.datasets import load_diabetes
+from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
@@ -18,11 +18,11 @@ ITERATION_POINTS = [1, 5, 10, 50, 100]
 # Load the dataset
 def load_user_dataset(uploaded_file):
     if uploaded_file is None:
-        X, y = load_diabetes(return_X_y=True)
-        feature_names = [
-            "age","sex","bmi","bp","s1","s2","s3","s4","s5","s6"
-        ]
-        target_name = "disease_progression"
+        data = fetch_california_housing()
+        X = data.data
+        y = data.target
+        feature_names = data.feature_names
+        target_name = "Median House Value"
 
         return X, y, feature_names, target_name, None
 
