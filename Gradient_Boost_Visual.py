@@ -34,29 +34,21 @@ def load_user_dataset(uploaded_file):
     if df.shape[1] < 2:
         return None, None, None, None, "Need at least 2 columns"
 
-    target_name = df.columns[0]
-    feature_names = list(df.columns[1:])
-
-    X = df.iloc[:, :-1]
+    target_name = df.columns[-1]
+    feature_names = list(df.columns[:-1])
+    
     y = df.iloc[:, -1]
+    X = df.iloc[:, :-1]
 
-    # checks (same as before)
+    # checks
     if not pd.api.types.is_numeric_dtype(y):
         return None, None, None, None, "Target must be numeric"
 
     if not all(pd.api.types.is_numeric_dtype(X[col]) for col in X.columns):
         return None, None, None, None, "All features must be numeric"
 
-    # Drop rows with any missing values
-    n_before = len(df)
-    df = df.dropna()
-    n_after = len(df)
-    
-    if n_after == 0:
-        return None, None, None, None, "All rows contain missing values."
-    
-    if n_after < n_before:
-        st.warning(f"Dropped {n_before - n_after} rows with missing values.")
+    if df.isnull().any().any():
+        return None, None, None, None, "Missing values not allowed"
 
     return X.to_numpy(), y.to_numpy(), feature_names, target_name, None
 
