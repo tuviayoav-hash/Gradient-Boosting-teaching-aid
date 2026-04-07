@@ -114,8 +114,14 @@ if "layout_toggle" not in st.session_state:
 
 
 # Upload CSV (if the user wants, if not default is the diabetes data)
-uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
 
+uploaded_file = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"])
+if uploaded_file is not None:
+    file_size_mb = uploaded_file.size / (1024 * 1024)
+    if file_size_mb > 50:
+        st.error("File too large (max 50 MB recommended).")
+        st.stop()
+        
 X, y, feature_names, target_name, error = load_user_dataset(uploaded_file)
 
 if error:
@@ -163,64 +169,62 @@ with ctrl_iter:
         horizontal=True
     )
         
-"""
-layout_choice = st.radio(
-    "Layout",
-    options=["Mobile", "Desktop"],
-    horizontal=True,
-    key="layout_toggle",
-)
+# layout_choice = st.radio(
+#     "Layout",
+#     options=["Mobile", "Desktop"],
+#     horizontal=True,
+#     key="layout_toggle",
+# )
 
-mobile_layout = layout_choice == "Mobile"
-right_col = None
+# mobile_layout = layout_choice == "Mobile"
+# right_col = None
 
-if mobile_layout:
-    st.subheader("Controls")
-    ctrl_depth, ctrl_lr, ctrl_iter = st.columns(3)
-    with ctrl_depth:
-        selected_depth = st.radio(
-            "Max depth",
-            options=MAX_DEPTHS,
-            index=MAX_DEPTHS.index(3),
-            key="gb_depth",
-        )
-    with ctrl_lr:
-        selected_lr = st.radio(
-            "Learning rate",
-            options=LEARNING_RATES,
-            index=LEARNING_RATES.index(0.1),
-            key="gb_lr",
-        )
-    with ctrl_iter:
-        selected_iter = st.radio(
-            "Number of iterations",
-            options=ITERATION_POINTS,
-            index=ITERATION_POINTS.index(10),
-            key="gb_iter",
-        )
-else:
-    left_col, right_col = st.columns([1.3, 4.7])
-    with left_col:
-        st.subheader("Controls")
-        selected_depth = st.radio(
-            "Max depth",
-            options=MAX_DEPTHS,
-            index=MAX_DEPTHS.index(3),
-            key="gb_depth",
-        )
-        selected_lr = st.radio(
-            "Learning rate",
-            options=LEARNING_RATES,
-            index=LEARNING_RATES.index(0.1),
-            key="gb_lr",
-        )
-        selected_iter = st.radio(
-            "Number of iterations",
-            options=ITERATION_POINTS,
-            index=ITERATION_POINTS.index(10),
-            key="gb_iter",
-        )
-"""
+# if mobile_layout:
+#     st.subheader("Controls")
+#     ctrl_depth, ctrl_lr, ctrl_iter = st.columns(3)
+#     with ctrl_depth:
+#         selected_depth = st.radio(
+#             "Max depth",
+#             options=MAX_DEPTHS,
+#             index=MAX_DEPTHS.index(3),
+#             key="gb_depth",
+#         )
+#     with ctrl_lr:
+#         selected_lr = st.radio(
+#             "Learning rate",
+#             options=LEARNING_RATES,
+#             index=LEARNING_RATES.index(0.1),
+#             key="gb_lr",
+#         )
+#     with ctrl_iter:
+#         selected_iter = st.radio(
+#             "Number of iterations",
+#             options=ITERATION_POINTS,
+#             index=ITERATION_POINTS.index(10),
+#             key="gb_iter",
+#         )
+# else:
+#     left_col, right_col = st.columns([1.3, 4.7])
+#     with left_col:
+#         st.subheader("Controls")
+#         selected_depth = st.radio(
+#             "Max depth",
+#             options=MAX_DEPTHS,
+#             index=MAX_DEPTHS.index(3),
+#             key="gb_depth",
+#         )
+#         selected_lr = st.radio(
+#             "Learning rate",
+#             options=LEARNING_RATES,
+#             index=LEARNING_RATES.index(0.1),
+#             key="gb_lr",
+#         )
+#         selected_iter = st.radio(
+#             "Number of iterations",
+#             options=ITERATION_POINTS,
+#             index=ITERATION_POINTS.index(10),
+#             key="gb_iter",
+#         )
 
 plot_df = df[
     (df["learning_rate"] == selected_lr) &
@@ -266,7 +270,7 @@ ax.text(
 )
 
 fig.tight_layout()
-
+st.pyplot(fig, use_container_width=True)
 ## Metadata
 st.write(f"Current train/test split seed: **{st.session_state.split_seed}**")
 
@@ -286,24 +290,22 @@ st.markdown(f"**Target variable:** `{target_name}`")
 st.markdown("**Feature variables:**")
 st.write(", ".join(feature_names))
 
-"""
-if mobile_layout:
-    st.pyplot(fig, use_container_width=True)
-else:
-    with right_col:
-        st.pyplot(fig, use_container_width=True)
+# if mobile_layout:
+#     st.pyplot(fig, use_container_width=True)
+# else:
+#     with right_col:
+#         st.pyplot(fig, use_container_width=True)
 
-if mobile_layout:
-    m1, m2 = st.columns(2)
-    m1.metric("Learning rate", selected_lr)
-    m2.metric("Max depth", selected_depth)
-    m3, m4 = st.columns(2)
-    m3.metric("Iterations", selected_iter)
-    m4.metric("RMSE", f"{rmse:.2f}")
-else:
-    metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
-    metric_col1.metric("Learning rate", selected_lr)
-    metric_col2.metric("Max depth", selected_depth)
-    metric_col3.metric("Iterations", selected_iter)
-    metric_col4.metric("RMSE", f"{rmse:.2f}")
-"""
+# if mobile_layout:
+#     m1, m2 = st.columns(2)
+#     m1.metric("Learning rate", selected_lr)
+#     m2.metric("Max depth", selected_depth)
+#     m3, m4 = st.columns(2)
+#     m3.metric("Iterations", selected_iter)
+#     m4.metric("RMSE", f"{rmse:.2f}")
+# else:
+#     metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+#     metric_col1.metric("Learning rate", selected_lr)
+#     metric_col2.metric("Max depth", selected_depth)
+#     metric_col3.metric("Iterations", selected_iter)
+#     metric_col4.metric("RMSE", f"{rmse:.2f}")
