@@ -10,10 +10,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 
-
+## Parameters
 LEARNING_RATES = [0.1, 0.3, 0.7, 0.9]
 MAX_DEPTHS = [1, 3, 6, 9]
 ITERATION_POINTS = [1, 5, 10, 50, 100]
+
+########################
+# FUNCTIONS
+########################
 
 # Load the dataset
 def load_user_dataset(uploaded_file):
@@ -52,7 +56,16 @@ def load_user_dataset(uploaded_file):
 
     return X.to_numpy(), y.to_numpy(), feature_names, target_name, None
 
+# Sample dataset (if requested)
+def maybe_sample_dataset(X, y, feature_names, max_rows=10000, seed=123):
+    if len(X) <= max_rows:
+        return X, y
 
+    rng = np.random.default_rng(seed)
+    idx = rng.choice(len(X), size=max_rows, replace=False)
+
+    return X[idx], y[idx]
+    
 # Gradient boost algo
 @st.cache_data
 def build_results_table(split_seed: int, X, y) -> pd.DataFrame:
@@ -115,7 +128,10 @@ def build_rmse_table(df_results: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame(rows).sort_values("rmse").reset_index(drop=True)
 
+######################
 ## App itself
+######################
+
 st.set_page_config(
     page_title="Gradient Boosting Fitting Demo",
     layout="wide"
@@ -130,7 +146,7 @@ if "layout_toggle" not in st.session_state:
     st.session_state.layout_toggle = "Mobile"
 
 
-# Upload CSV (if the user wants, if not default is the diabetes data)
+# Upload CSV (if the user wants, if not default is the california prices dataset)
 
 uploaded_file = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"])
 if uploaded_file is not None:
@@ -145,7 +161,26 @@ if error:
     st.error(error)
     st.stop()
 
-df = build_results_table(st.session_state.split_seed, X, y)
+# Constrain datasize?
+st.subheader("Data size option")
+
+use_sampling = st.radio(
+    "Choose computation mode",
+    options=["Sample data (10K points)", "Use full data"],
+    index=0,
+    horizontal=True
+)
+
+st.caption("Using full data may take much longer to compute, especially for large datasets.")
+
+if use_sampling == "Sample data":
+    X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=10000, seed=123)
+else:
+    X_model, y_model = X, y
+    if len(X) > 10000:
+        st.warning("Full-data mode is selected. This may take a while to compute.")
+
+df = build_results_table(st.session_state.split_seed, X_model, y_model)
 rmse_table = build_rmse_table(df)
 
 # Fixed axis limits across all parameter choices
@@ -267,4 +302,8 @@ col2.metric("Number of features", n_features)
 
 col3, col4 = st.columns(2)
 col3.metric("Target variable", target_name)
-col4.metric("Feature variables", ", ".join(feature_names))
+with col4:
+    st.write("**Feature variables:**")
+    with st.expander(f"{len(feature_names)} features"):
+        for f in feature_names:
+            st.write(f"- {f}")
