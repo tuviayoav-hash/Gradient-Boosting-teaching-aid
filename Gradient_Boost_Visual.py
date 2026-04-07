@@ -37,8 +37,8 @@ def load_user_dataset(uploaded_file):
     target_name = df.columns[0]
     feature_names = list(df.columns[1:])
 
-    y = df.iloc[:, 0]
-    X = df.iloc[:, 1:]
+    X = df.iloc[:, :-1]
+    y = df.iloc[:, -1]
 
     # checks (same as before)
     if not pd.api.types.is_numeric_dtype(y):
