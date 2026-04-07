@@ -157,6 +157,14 @@ margin = 0.05 * (global_max - global_min)
 axis_min = global_min - margin
 axis_max = global_max + margin
 
+# Controls
+if "selected_depth" not in st.session_state:
+    st.session_state["selected_depth"] = 3
+if "selected_lr" not in st.session_state:
+    st.session_state["selected_lr"] = 0.1
+if "selected_iter" not in st.session_state:
+    st.session_state["selected_iter"] = 10
+    
 st.subheader("Controls")
 ctrl_depth, ctrl_lr, ctrl_iter = st.columns(3)
 with ctrl_depth:
@@ -238,6 +246,7 @@ if st.button("Show lowest RMSE setting"):
 st.write(f"Current train/test split seed: **{st.session_state.split_seed}**")
 if st.button("Randomize train/test seed"):
     st.session_state.split_seed = random.randint(1, 10_000_000)
+    st.rerun()
     
 ## Metadata
 st.divider()
@@ -254,4 +263,4 @@ col2.metric("Number of features", n_features)
 
 col3, col4 = st.columns(2)
 col3.metric("Target variable", target_name)
-col4.metric("Feature variables", join(feature_names))
+col4.metric("Feature variables", ", ".join(feature_names))
