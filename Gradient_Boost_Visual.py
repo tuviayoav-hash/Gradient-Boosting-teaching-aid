@@ -47,8 +47,16 @@ def load_user_dataset(uploaded_file):
     if not all(pd.api.types.is_numeric_dtype(X[col]) for col in X.columns):
         return None, None, None, None, "All features must be numeric"
 
-    if df.isnull().any().any():
-        return None, None, None, None, "Missing values not allowed"
+    # Drop rows with any missing values
+    n_before = len(df)
+    df = df.dropna()
+    n_after = len(df)
+    
+    if n_after == 0:
+        return None, None, None, None, "All rows contain missing values."
+    
+    if n_after < n_before:
+        st.warning(f"Dropped {n_before - n_after} rows with missing values.")
 
     return X.to_numpy(), y.to_numpy(), feature_names, target_name, None
 
