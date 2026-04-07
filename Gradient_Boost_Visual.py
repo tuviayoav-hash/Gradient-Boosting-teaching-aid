@@ -1,4 +1,6 @@
+import io
 import random
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
@@ -9,20 +11,51 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 
 
-st.set_page_config(
-    page_title="Gradient Boosting Overfitting Demo",
-    layout="wide"
-)
-
 LEARNING_RATES = [0.05, 0.1, 0.3, 0.7, 0.9]
 MAX_DEPTHS = [1, 3, 6]
 ITERATION_POINTS = [1, 5, 10, 50, 100]
 
+# Load the dataset
+def load_user_dataset(uploaded_file):
+    if uploaded_file is None:
+        X, y = load_diabetes(return_X_y=True)
+        feature_names = [
+            "age","sex","bmi","bp","s1","s2","s3","s4","s5","s6"
+        ]
+        target_name = "disease_progression"
 
+        return X, y, feature_names, target_name, None
+
+    try:
+        df = pd.read_csv(uploaded_file)
+    except Exception as e:
+        return None, None, None, None, f"Could not read CSV: {e}"
+
+    if df.shape[1] < 2:
+        return None, None, None, None, "Need at least 2 columns"
+
+    target_name = df.columns[0]
+    feature_names = list(df.columns[1:])
+
+    y = df.iloc[:, 0]
+    X = df.iloc[:, 1:]
+
+    # checks (same as before)
+    if not pd.api.types.is_numeric_dtype(y):
+        return None, None, None, None, "Target must be numeric"
+
+    if not all(pd.api.types.is_numeric_dtype(X[col]) for col in X.columns):
+        return None, None, None, None, "All features must be numeric"
+
+    if df.isnull().any().any():
+        return None, None, None, None, "Missing values not allowed"
+
+    return X.to_numpy(), y.to_numpy(), feature_names, target_name, None
+
+
+# Gradient boost algo
 @st.cache_data
-def build_results_table(split_seed: int) -> pd.DataFrame:
-    X, y = load_diabetes(return_X_y=True)
-
+def build_results_table(split_seed: int, X, y) -> pd.DataFrame:
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
@@ -65,6 +98,14 @@ def build_results_table(split_seed: int) -> pd.DataFrame:
     return df
 
 
+## App itself
+st.set_page_config(
+    page_title="Gradient Boosting Fitting Demo",
+    layout="wide"
+)
+
+st.title("Gradient Boosting Fitting Demo")
+
 if "split_seed" not in st.session_state:
     st.session_state.split_seed = 42
 
@@ -72,25 +113,19 @@ if "layout_toggle" not in st.session_state:
     st.session_state.layout_toggle = "Mobile"
 
 
-st.title("Gradient Boosting Overfitting Demo")
-st.write(f"Current train/test split seed: **{st.session_state.split_seed}**")
+# Upload CSV (if the user wants, if not default is the diabetes data)
+uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
 
-top_left, top_right = st.columns([2, 1])
+X, y, feature_names, target_name, error = load_user_dataset(uploaded_file)
 
-with top_left:
-    if st.button("Re-compute table with a new train/test split"):
-        st.session_state.split_seed = random.randint(1, 10_000_000)
+if error:
+    st.error(error)
+    st.stop()
 
-df = build_results_table(st.session_state.split_seed)
+df = build_results_table(st.session_state.split_seed, X, y)
 
-with top_right:
-    csv_data = df.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="Download current table as CSV",
-        data=csv_data,
-        file_name=f"gb_test_predictions_seed_{st.session_state.split_seed}.csv",
-        mime="text/csv"
-    )
+if st.button("Randomize train/test split"):
+    st.session_state.split_seed = random.randint(1, 10_000_000)
 
 # Fixed axis limits across all parameter choices
 global_min = min(df["y_true"].min(), df["y_pred"].min())
@@ -101,6 +136,34 @@ margin = 0.05 * (global_max - global_min)
 axis_min = global_min - margin
 axis_max = global_max + margin
 
+st.subheader("Controls")
+ctrl_depth, ctrl_lr, ctrl_iter = st.columns(3)
+with ctrl_depth:
+    selected_depth = st.radio(
+        "Max depth",
+        options=MAX_DEPTHS,
+        index=MAX_DEPTHS.index(3),
+        key="gb_depth",
+        horizontal=True
+    )
+with ctrl_lr:
+    selected_lr = st.radio(
+        "Learning rate",
+        options=LEARNING_RATES,
+        index=LEARNING_RATES.index(0.1),
+        key="gb_lr",
+        horizontal=True
+    )
+with ctrl_iter:
+    selected_iter = st.radio(
+        "Number of iterations",
+        options=ITERATION_POINTS,
+        index=ITERATION_POINTS.index(10),
+        key="gb_iter",
+        horizontal=True
+    )
+        
+"""
 layout_choice = st.radio(
     "Layout",
     options=["Mobile", "Desktop"],
@@ -157,6 +220,7 @@ else:
             index=ITERATION_POINTS.index(10),
             key="gb_iter",
         )
+"""
 
 plot_df = df[
     (df["learning_rate"] == selected_lr) &
@@ -190,7 +254,7 @@ ax.set_aspect("equal", adjustable="box")
 ax.set_xlabel("Actual outcome")
 ax.set_ylabel("Predicted outcome")
 ax.set_title(
-    f"Test subset | learning_rate={selected_lr}, max_depth={selected_depth}, iterations={selected_iter}"
+    f"Test subset | {selected_lr}, max_depth={selected_depth}, iterations={selected_iter}"
 )
 
 ax.text(
@@ -203,6 +267,26 @@ ax.text(
 
 fig.tight_layout()
 
+## Metadata
+st.write(f"Current train/test split seed: **{st.session_state.split_seed}**")
+
+st.divider()
+st.subheader("Dataset summary")
+
+n_obs = len(y)
+n_features = len(feature_names)
+
+col1, col2 = st.columns(2)
+
+col1.metric("Number of observations", n_obs)
+col2.metric("Number of features", n_features)
+
+st.markdown(f"**Target variable:** `{target_name}`")
+
+st.markdown("**Feature variables:**")
+st.write(", ".join(feature_names))
+
+"""
 if mobile_layout:
     st.pyplot(fig, use_container_width=True)
 else:
@@ -222,6 +306,4 @@ else:
     metric_col2.metric("Max depth", selected_depth)
     metric_col3.metric("Iterations", selected_iter)
     metric_col4.metric("RMSE", f"{rmse:.2f}")
-
-with st.expander("Show filtered data"):
-    st.dataframe(plot_df, use_container_width=True)
+"""
