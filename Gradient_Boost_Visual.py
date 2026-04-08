@@ -157,6 +157,9 @@ if "selected_iter" not in st.session_state:
 
 if "sampling_mode" not in st.session_state:
     st.session_state["sampling_mode"] = "Sample 1,000 rows"
+
+if "uploaded_file" not in st.session_state:
+        st.session_state["uploaded_file"] = None
     
 ######################
 ## App itself
@@ -199,7 +202,7 @@ use_sampling = st.radio(
 
 st.caption("Using full data may take much longer to compute, especially for large datasets.")
 
-X, y, feature_names, target_name, error = load_user_dataset()
+X, y, feature_names, target_name, error = load_user_dataset( st.session_state["uploaded_file"])
 
 if use_sampling == "Sample data (1K points)":
     X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=1000, seed=123)
