@@ -186,6 +186,36 @@ st.markdown(
     """
 )
 
+
+# Constrain datasize?
+st.subheader("Data size option")
+
+use_sampling = st.radio(
+    "Choose computation mode",
+    options=["Sample data (1K points)", "Sample data (10K points)", "Use full data"],
+    index=0,
+    horizontal=True
+)
+
+st.caption("Using full data may take much longer to compute, especially for large datasets.")
+
+if use_sampling == "Sample data (1K points)":
+    X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=1000, seed=123)
+elif use_sampling == "Sample data (10k points)":
+    X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=10000, seed=123)
+    if len(X) > 1000:
+        st.warning("10K sampling is selected. This may take a while to compute.")
+    else:
+        st.warning("Dataset has less than 1,000 points")
+else:
+    X_model, y_model = X, y
+    if len(X) > 10000:
+        st.warning("Full-data mode is selected. This may take a long while to compute.")
+    else:
+        st.warning("Dataset has less than 10,000 points")
+
+
+
 # build results
 df = build_results_table(st.session_state["split_seed"], X_model, y_model)
 rmse_table = build_rmse_table(df)
@@ -290,35 +320,6 @@ with btn_col2:
         "Randomize train/test seed",
         on_click=randomize_seed
     )
-
-
-# Constrain datasize?
-st.subheader("Data size option")
-
-use_sampling = st.radio(
-    "Choose computation mode",
-    options=["Sample data (1K points)", "Sample data (10K points)", "Use full data"],
-    index=0,
-    horizontal=True
-)
-
-st.caption("Using full data may take much longer to compute, especially for large datasets.")
-
-if use_sampling == "Sample data (1K points)":
-    X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=1000, seed=123)
-elif use_sampling == "Sample data (10k points)":
-    X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=10000, seed=123)
-    if len(X) > 1000:
-        st.warning("10K sampling is selected. This may take a while to compute.")
-    else:
-        st.warning("Dataset has less than 1,000 points")
-else:
-    X_model, y_model = X, y
-    if len(X) > 10000:
-        st.warning("Full-data mode is selected. This may take a long while to compute.")
-    else:
-        st.warning("Dataset has less than 10,000 points")
-
 
 
 # Upload CSV (if the user wants, if not default is the california prices dataset)
