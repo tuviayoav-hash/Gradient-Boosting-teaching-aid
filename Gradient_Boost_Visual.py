@@ -141,6 +141,22 @@ def set_best_rmse():
 
 def randomize_seed():
     st.session_state["split_seed"] = random.randint(1, 1000)
+
+# Session state defaults:
+if "split_seed" not in st.session_state:
+    st.session_state["split_seed"] = 42
+
+if "selected_depth" not in st.session_state:
+    st.session_state["selected_depth"] = 3
+
+if "selected_lr" not in st.session_state:
+    st.session_state["selected_lr"] = 0.1
+
+if "selected_iter" not in st.session_state:
+    st.session_state["selected_iter"] = 10
+
+if "sampling_mode" not in st.session_state:
+    st.session_state["sampling_mode"] = "Sample 1,000 rows"
     
 ######################
 ## App itself
@@ -150,9 +166,6 @@ st.set_page_config(
     page_title="Gradient Boosting Fitting Demo",
     layout="wide"
 )
-
-if "split_seed" not in st.session_state:
-    st.session_state.split_seed = 42
 
 st.title("Gradient Boosting Fitting Demo")
 
@@ -172,48 +185,6 @@ st.markdown(
     - Can increasing the number of iterations eventually hurt performance?
     """
 )
-
-# Upload CSV (if the user wants, if not default is the california prices dataset)
-
-uploaded_file = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"])
-if uploaded_file is not None:
-    file_size_mb = uploaded_file.size / (1024 * 1024)
-    if file_size_mb > 50:
-        st.error("File too large (max 50 MB recommended).")
-        st.stop()
-        
-X, y, feature_names, target_name, error = load_user_dataset(uploaded_file)
-
-if error:
-    st.error(error)
-    st.stop()
-
-# Constrain datasize?
-st.subheader("Data size option")
-
-use_sampling = st.radio(
-    "Choose computation mode",
-    options=["Sample data (1K points)", "Sample data (10K points)", "Use full data"],
-    index=0,
-    horizontal=True
-)
-
-st.caption("Using full data may take much longer to compute, especially for large datasets.")
-
-if use_sampling == "Sample data (1K points)":
-    X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=1000, seed=123)
-elif use_sampling == "Sample data (10k points)":
-    X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=10000, seed=123)
-    if len(X) > 1000:
-        st.warning("10K sampling is selected. This may take a while to compute.")
-    else:
-        st.warning("Dataset has less than 1,000 points")
-else:
-    X_model, y_model = X, y
-    if len(X) > 10000:
-        st.warning("Full-data mode is selected. This may take a long while to compute.")
-    else:
-        st.warning("Dataset has less than 10,000 points")
 
 # build results
 df = build_results_table(st.session_state["split_seed"], X_model, y_model)
@@ -319,7 +290,61 @@ with btn_col2:
         "Randomize train/test seed",
         on_click=randomize_seed
     )
+
+
+# Constrain datasize?
+st.subheader("Data size option")
+
+use_sampling = st.radio(
+    "Choose computation mode",
+    options=["Sample data (1K points)", "Sample data (10K points)", "Use full data"],
+    index=0,
+    horizontal=True
+)
+
+st.caption("Using full data may take much longer to compute, especially for large datasets.")
+
+if use_sampling == "Sample data (1K points)":
+    X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=1000, seed=123)
+elif use_sampling == "Sample data (10k points)":
+    X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=10000, seed=123)
+    if len(X) > 1000:
+        st.warning("10K sampling is selected. This may take a while to compute.")
+    else:
+        st.warning("Dataset has less than 1,000 points")
+else:
+    X_model, y_model = X, y
+    if len(X) > 10000:
+        st.warning("Full-data mode is selected. This may take a long while to compute.")
+    else:
+        st.warning("Dataset has less than 10,000 points")
+
+
+
+# Upload CSV (if the user wants, if not default is the california prices dataset)
+st.subheader("Upload own dataset option")
+uploaded_file = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"])
+if uploaded_file is not None:
+    file_size_mb = uploaded_file.size / (1024 * 1024)
+    if file_size_mb > 50:
+        st.error("File too large (max 50 MB recommended).")
+        st.stop()
         
+X, y, feature_names, target_name, error = load_user_dataset(uploaded_file)
+
+if error:
+    st.error(error)
+    st.stop()
+    
+st.markdown(
+    """
+    Must follow format:
+    - Target variable is the last column
+    - All variables are numeric (for now)
+    - No missing data
+    """
+)
+
 ## Metadata
 st.divider()
 st.subheader("Dataset summary")
