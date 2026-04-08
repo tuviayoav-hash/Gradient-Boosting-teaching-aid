@@ -1,16 +1,22 @@
 # Gradient Boosting teaching aid
 [Link to the app on StreamLit](https://gradient-boosting-teaching-aid.streamlit.app/)
+
 Gradient Boosting is a powerful prediction algorithm for structured tabular data.
+
 This interactive Streamlit app was developed as a teaching aid, for building intuition about how gradient boosting behaves.
+
 Specifically, how the setting of three parameters - the learning rate, the maximum depth, and the iteration count - affects generalization and overfitting.
 
 ## What this project does
 Instead of just providing the RMSE on the test sub-set, the app plots the actual values vs. the predictions on a scatter plot.
+
 The intuition presented is as the dots are horizontally closer to the fixed 45° reference line, so does the algorithm perform better on the test split.
+
 Axes are fixed across all configurations, so you can visually compare models without misleading rescaling.
 
 ## Why is this useful
 Gradient boosting is often treated as a “black box.”
+
 This tool makes its behavior explicit, and allows to intuitivelly understand:
 * How does underfitting or overfitting emerge from different settings?
 * How do the learning rate and and the depth interact with one another?
@@ -30,13 +36,16 @@ Additionally, it allows:
 
 ## Uploading your own data
 Instead of using the default California Housing Prices dataset, you can upload a CSV file directly in the app.
+
 Expected format:
 * Last column is target variable
 * All columns are numeric (for now)
 * No missing values
+* Dataset not exceeding 50MB
 
 ## Notes on performance
 Large datasets can slow computation.
+
 You can switch between:
 * Small sample of 1,000 observations from the data (fast)
 * Larger sample of 10,000 observations (a bit slower, but more accurate)
@@ -51,4 +60,5 @@ This app focuses on intuition over abstraction:
 
 ## Contributing
 Contributions are welcome!
+
 If you have ideas for improvements, feel free to open an issue or submit a pull request.
