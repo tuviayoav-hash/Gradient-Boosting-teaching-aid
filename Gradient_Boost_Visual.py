@@ -128,6 +128,20 @@ def build_rmse_table(df_results: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame(rows).sort_values("rmse").reset_index(drop=True)
 
+#######################
+## App button callbacks
+#######################
+
+def set_best_rmse():
+    best_row = rmse_table.loc[rmse_table["rmse"].idxmin()]
+    st.session_state["selected_lr"] = float(best_row["learning_rate"])
+    st.session_state["selected_depth"] = int(best_row["max_depth"])
+    st.session_state["selected_iter"] = int(best_row["n_estimators"])
+
+
+def randomize_seed():
+    st.session_state["split_seed"] = random.randint(1, 1000)
+    
 ######################
 ## App itself
 ######################
@@ -137,14 +151,27 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Gradient Boosting Fitting Demo")
-
 if "split_seed" not in st.session_state:
     st.session_state.split_seed = 42
 
-if "layout_toggle" not in st.session_state:
-    st.session_state.layout_toggle = "Mobile"
+st.title("Gradient Boosting Fitting Demo")
 
+st.markdown(
+    """
+    Gradient Boosting is a powerful predictive algorithm for structured tabular data. However, it is often treated as a "black box".
+    
+    This interactive app was built as a teaching aid to help users develop intuition for how gradient boosting behaves, especially how three key parameters - the learning rate, maximum tree depth, and number of iterations - affect generalization and overfitting.
+
+    Rather than showing only the RMSE on the test subset, the app plots actual values against predicted values in a scatter plot.
+    
+    The visual intuition is simple: the closer the points lie to the fixed 45° reference line, the better the model is performing on the test split.
+    
+    Questions you might explore:
+    - How do underfitting and overfitting emerge under different parameter settings?
+    - How do learning rate and tree depth interact?
+    - Can increasing the number of iterations eventually hurt performance?
+    """
+)
 
 # Upload CSV (if the user wants, if not default is the california prices dataset)
 
@@ -189,7 +216,7 @@ else:
         st.warning("Dataset has less than 10,000 points")
 
 # build results
-df = build_results_table(st.session_state.split_seed, X_model, y_model)
+df = build_results_table(st.session_state["split_seed"], X_model, y_model)
 rmse_table = build_rmse_table(df)
 
 # Fixed axis limits across all parameter choices
@@ -200,24 +227,6 @@ global_max = max(df["y_true"].max(), df["y_pred"].max())
 margin = 0.05 * (global_max - global_min)
 axis_min = global_min - margin
 axis_max = global_max + margin
-
-
-btn_col1, btn_col2 = st.columns(2)
-# Jump to setting with lowest RMSE
-with btn_col1:
-    if st.button("Show lowest RMSE setting"):
-        best_row = rmse_table.loc[rmse_table["rmse"].idxmin()]
-        st.session_state["selected_lr"] = float(best_row["learning_rate"])
-        st.session_state["selected_depth"] = int(best_row["max_depth"])
-        st.session_state["selected_iter"] = int(best_row["n_estimators"])
-        st.rerun()
-
-# Randomize train-test split
-with btn_col2:
-    st.write(f"Current train/test split seed: **{st.session_state.split_seed}**")
-    if st.button("Randomize train/test seed"):
-        st.session_state.split_seed = random.randint(1, 1000)
-        st.rerun()
 
 # Controls
 if "selected_depth" not in st.session_state:
@@ -252,9 +261,9 @@ with ctrl_iter:
     )
     
 plot_df = df[
-    (df["learning_rate"] == selected_lr) &
-    (df["max_depth"] == selected_depth) &
-    (df["n_estimators"] == selected_iter)
+    (df["learning_rate"] == st.session_state["selected_lr"]) &
+    (df["max_depth"] == st.session_state["selected_depth"]) &
+    (df["n_estimators"] == st.session_state["selected_iter"])
 ].copy()
 
 rmse = mean_squared_error(
@@ -295,6 +304,21 @@ ax.text(
 ax.set_aspect("equal", adjustable="box")
 fig.tight_layout()
 st.pyplot(fig, use_container_width=False)
+
+## Other buttons
+btn_col1, btn_col2 = st.columns(2)
+
+with btn_col1:
+    st.button(
+        "Show lowest RMSE setting",
+        on_click=set_best_rmse
+    )
+
+with btn_col2:
+    st.button(
+        "Randomize train/test seed",
+        on_click=randomize_seed
+    )
         
 ## Metadata
 st.divider()
