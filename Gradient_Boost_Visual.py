@@ -335,6 +335,8 @@ if uploaded_file is not None:
     if file_size_mb > 50:
         st.error("File too large (max 50 MB recommended).")
         st.stop()
+    else
+        st.rerun()
         
 X, y, feature_names, target_name, error = load_user_dataset(uploaded_file)
 
