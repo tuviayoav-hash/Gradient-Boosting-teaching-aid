@@ -190,6 +190,30 @@ st.markdown(
 )
 
 
+# Upload CSV (if the user wants, if not default is the california prices dataset)
+st.markdown("You can even upload your own dataset!")
+uploaded_file = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"])
+if uploaded_file is not None:
+    file_size_mb = uploaded_file.size / (1024 * 1024)
+    if file_size_mb > 50:
+        st.error("File too large (max 50 MB recommended).")
+        st.stop()
+        
+X, y, feature_names, target_name, error = load_user_dataset(uploaded_file)
+
+if error:
+    st.error(error)
+    st.stop()
+    
+st.markdown(
+    """
+    Must follow format:
+    - Target variable is the last column
+    - All variables are numeric (for now)
+    - No missing data
+    """
+)
+
 # Constrain datasize?
 st.subheader("Data size option")
 
@@ -201,8 +225,6 @@ use_sampling = st.radio(
 )
 
 st.caption("Using full data may take much longer to compute, especially for large datasets.")
-
-X, y, feature_names, target_name, error = load_user_dataset( st.session_state["uploaded_file"])
 
 if use_sampling == "Sample data (1K points)":
     X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=1000, seed=123)
@@ -327,31 +349,6 @@ with btn_col2:
     )
 
 
-# Upload CSV (if the user wants, if not default is the california prices dataset)
-st.subheader("Upload own dataset option")
-uploaded_file = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"])
-if uploaded_file is not None:
-    file_size_mb = uploaded_file.size / (1024 * 1024)
-    if file_size_mb > 50:
-        st.error("File too large (max 50 MB recommended).")
-        st.stop()
-    else:
-        st.rerun()
-        
-X, y, feature_names, target_name, error = load_user_dataset(uploaded_file)
-
-if error:
-    st.error(error)
-    st.stop()
-    
-st.markdown(
-    """
-    Must follow format:
-    - Target variable is the last column
-    - All variables are numeric (for now)
-    - No missing data
-    """
-)
 
 ## Metadata
 st.divider()
