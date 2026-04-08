@@ -217,6 +217,7 @@ else:
 
 
 # build results
+X, y, feature_names, target_name, error = load_user_dataset()
 df = build_results_table(st.session_state["split_seed"], X_model, y_model)
 rmse_table = build_rmse_table(df)
 
