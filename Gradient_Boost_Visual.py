@@ -199,6 +199,8 @@ use_sampling = st.radio(
 
 st.caption("Using full data may take much longer to compute, especially for large datasets.")
 
+X, y, feature_names, target_name, error = load_user_dataset()
+
 if use_sampling == "Sample data (1K points)":
     X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=1000, seed=123)
 elif use_sampling == "Sample data (10k points)":
@@ -217,7 +219,6 @@ else:
 
 
 # build results
-X, y, feature_names, target_name, error = load_user_dataset()
 df = build_results_table(st.session_state["split_seed"], X_model, y_model)
 rmse_table = build_rmse_table(df)
 
