@@ -91,21 +91,27 @@ def build_results_table(split_seed: int, X, y) -> pd.DataFrame:
 
             model.fit(X_train, y_train)
 
-            for i, y_pred_test in enumerate(model.staged_predict(X_test), start=1):
+            for i, (y_pred_train, y_pred_test) in enumerate(
+                zip(model.staged_predict(X_train), model.staged_predict(X_test)), start=1
+            ):
                 if i in wanted:
-                    df_chunk = pd.DataFrame({
-                        "y_true": y_test,
-                        "y_pred": y_pred_test,
-                        "learning_rate": lr,
-                        "max_depth": depth,
-                        "n_estimators": i,
-                        "split_seed": split_seed
-                    })
-                    rows.append(df_chunk)
+                    for subset, y_true, y_pred in [
+                        ("train", y_train, y_pred_train),
+                        ("test",  y_test,  y_pred_test),
+                    ]:
+                        rows.append(pd.DataFrame({
+                            "y_true": y_true,
+                            "y_pred": y_pred,
+                            "learning_rate": lr,
+                            "max_depth": depth,
+                            "n_estimators": i,
+                            "split_seed": split_seed,
+                            "subset": subset,
+                        }))
 
     df = pd.concat(rows, ignore_index=True)
     df = df.sort_values(
-        ["learning_rate", "max_depth", "n_estimators"]
+        ["learning_rate", "max_depth", "n_estimators", "subset"]
     ).reset_index(drop=True)
 
     return df
@@ -115,14 +121,15 @@ def build_results_table(split_seed: int, X, y) -> pd.DataFrame:
 def build_rmse_table(df_results: pd.DataFrame) -> pd.DataFrame:
     rows = []
 
-    grouped = df_results.groupby(["learning_rate", "max_depth", "n_estimators"])
+    grouped = df_results.groupby(["learning_rate", "max_depth", "n_estimators", "subset"])
 
-    for (lr, depth, n_est), g in grouped:
+    for (lr, depth, n_est, subset), g in grouped:
         rmse = mean_squared_error(g["y_true"], g["y_pred"]) ** 0.5
         rows.append({
             "learning_rate": lr,
             "max_depth": depth,
             "n_estimators": n_est,
+            "subset": subset,
             "rmse": rmse
         })
 
@@ -133,7 +140,8 @@ def build_rmse_table(df_results: pd.DataFrame) -> pd.DataFrame:
 #######################
 
 def set_best_rmse():
-    best_row = rmse_table.loc[rmse_table["rmse"].idxmin()]
+    test_rmse = rmse_table[rmse_table["subset"] == "test"]
+    best_row = test_rmse.loc[test_rmse["rmse"].idxmin()]
     st.session_state["selected_lr"] = float(best_row["learning_rate"])
     st.session_state["selected_depth"] = int(best_row["max_depth"])
     st.session_state["selected_iter"] = int(best_row["n_estimators"])
@@ -249,50 +257,40 @@ with ctrl_iter:
         horizontal=True
     )
 
-plot_df = df[
+selected_mask = (
     (df["learning_rate"] == st.session_state["selected_lr"]) &
     (df["max_depth"] == st.session_state["selected_depth"]) &
     (df["n_estimators"] == st.session_state["selected_iter"])
-].copy()
-
-rmse = mean_squared_error(
-    plot_df["y_true"],
-    plot_df["y_pred"]
-) ** 0.5
-
-fig, ax = plt.subplots(figsize=(3.6, 2.7), dpi=200)
-
-ax.scatter(
-    plot_df["y_true"],
-    plot_df["y_pred"],
-    alpha=0.7
 )
+plot_df_test  = df[selected_mask & (df["subset"] == "test")].copy()
+plot_df_train = df[selected_mask & (df["subset"] == "train")].copy()
 
-ax.plot(
-    [axis_min, axis_max],
-    [axis_min, axis_max],
-    linestyle="--"
-)
+def make_scatter(plot_df, title, axis_min, axis_max):
+    rmse = mean_squared_error(plot_df["y_true"], plot_df["y_pred"]) ** 0.5
+    fig, ax = plt.subplots(figsize=(3.6, 2.7), dpi=200)
+    ax.scatter(plot_df["y_true"], plot_df["y_pred"], alpha=0.7)
+    ax.plot([axis_min, axis_max], [axis_min, axis_max], linestyle="--")
+    ax.set_xlim(axis_min, axis_max)
+    ax.set_ylim(axis_min, axis_max)
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_xlabel("Actual outcome")
+    ax.set_ylabel("Predicted outcome")
+    ax.set_title(title)
+    ax.text(
+        0.03, 0.97,
+        f"RMSE = {rmse:.2f}",
+        transform=ax.transAxes,
+        verticalalignment="top",
+        bbox=dict(boxstyle="round", facecolor="white", alpha=0.8)
+    )
+    fig.tight_layout()
+    return fig
 
-ax.set_xlim(axis_min, axis_max)
-ax.set_ylim(axis_min, axis_max)
-ax.set_aspect("equal", adjustable="box")
-
-ax.set_xlabel("Actual outcome")
-ax.set_ylabel("Predicted outcome")
-ax.set_title("Test subset")
-
-ax.text(
-    0.03, 0.97,
-    f"RMSE = {rmse:.2f}",
-    transform=ax.transAxes,
-    verticalalignment="top",
-    bbox=dict(boxstyle="round", facecolor="white", alpha=0.8)
-)
-
-ax.set_aspect("equal", adjustable="box")
-fig.tight_layout()
-st.pyplot(fig, use_container_width=False)
+col_test, col_train = st.columns(2)
+with col_test:
+    st.pyplot(make_scatter(plot_df_test,  "Test subset",  axis_min, axis_max), use_container_width=False)
+with col_train:
+    st.pyplot(make_scatter(plot_df_train, "Train subset", axis_min, axis_max), use_container_width=False)
 
 ## Other buttons
 btn_col1, btn_col2 = st.columns(2)
