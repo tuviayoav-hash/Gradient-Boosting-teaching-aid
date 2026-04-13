@@ -318,7 +318,7 @@ if uploaded_file is None:
 else:
     name_data = uploaded_file.name
 
-metric("Name of dataset", name_data)
+st.metric("Name of dataset", name_data)
 
 col1, col2 = st.columns(2)
 col1.metric("Target variable", target_name)
