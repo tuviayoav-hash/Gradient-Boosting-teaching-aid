@@ -360,7 +360,7 @@ st.radio(
     horizontal=True
 )
 
-st.caption(f"The current dataset includes {len(y_model)} observations.")
+st.caption(f"The full dataset includes {len(y)} observations.")
 st.caption("Using full data may take much longer to compute, especially for large datasets.")
 
 if use_sampling == "Sample data (10K points)":
