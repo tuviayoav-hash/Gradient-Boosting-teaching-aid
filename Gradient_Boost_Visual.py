@@ -318,10 +318,8 @@ if uploaded_file is None:
 else:
     name_data = uploaded_file.name
 
-col1, col2 = st.columns(2)
-
-col1.metric("Name of dataset", name_data)
-col2.metric("Number of obs. in whole data", len(y_model))
+metric("Name of dataset", name_data)
+col2.metric("Number of obs. in whole data", )
 
 col3, col4 = st.columns(2)
 col3.metric("Target variable", target_name)
@@ -363,6 +361,7 @@ st.radio(
     horizontal=True
 )
 
+st.caption(f"The current dataset includes {len(y_model)} observations.")
 st.caption("Using full data may take much longer to compute, especially for large datasets.")
 
 if use_sampling == "Sample data (10K points)":
