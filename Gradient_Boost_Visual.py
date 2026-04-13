@@ -181,7 +181,7 @@ st.markdown(
     """
     Gradient Boosting is a powerful predictive algorithm for structured tabular data. However, it is often treated as a "black box".
 
-    This interactive app was built as a teaching aid to help develop intuition for how gradient boosting behaves, specifically how three key parameters - the learning rate, maximum depth, and num. of iterations - affect generalization and overfitting.
+    This app was built as a teaching aid to help develop intuition for how the model behaves, specifically how three key parameters affect generalization and overfitting.
 
     Rather than showing only the RMSE, the app plots the actual values against the predicted ones. The visual intuition is simple: the closer the points lie to the fixed 45° line, the better the model is performing.
     """
