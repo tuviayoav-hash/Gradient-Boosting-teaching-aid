@@ -183,6 +183,8 @@ st.markdown(
     - How do underfitting and overfitting emerge under different parameter settings?
     - How do learning rate and tree depth interact?
     - Can increasing the number of iterations eventually hurt performance?
+
+    The default dataset includes sklearn's California House Prices table. Below is an option to upload your own data!
     """
 )
 
@@ -307,25 +309,51 @@ with btn_col2:
         on_click=randomize_seed
     )
 
-## Data source controls (below the scatterplot)
+## Metadata
+st.divider()
+st.subheader("Dataset summary")
+
+if uploaded_file is None:
+    name_data = "California Housing Dataset (from sklearn)"
+else:
+    name_data = uploaded_file.name
+
+col1, col2 = st.columns(2)
+
+col1.metric("Name of dataset", name_data)
+col2.metric("Number of obs. in whole data", len(y_model))
+
+col3, col4 = st.columns(2)
+col3.metric("Target variable", target_name)
+with col4:
+    st.write("**Feature variables:**")
+    with st.expander(f"{len(feature_names)} features"):
+        for f in feature_names:
+            st.write(f"- {f}")
+            
+## Data source controls
 st.divider()
 
 # Upload CSV (if the user wants, if not default is the california prices dataset)
-st.markdown("You can even upload your own dataset!")
-_uploaded = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"], key="csv_upload")
-if _uploaded is not None and _uploaded.size / (1024 * 1024) > 50:
-    st.error("File too large (max 50 MB recommended).")
-
+st.subheader("Upload another table")
 st.markdown(
     """
+    Done with the default dataset? Upload you own!
+
     Must follow format:
+    - CSV file
     - Target variable is the last column
     - All variables are numeric (for now)
     - No missing data
     """
-)
+           )
+_uploaded = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"], key="csv_upload")
+if _uploaded is not None and _uploaded.size / (1024 * 1024) > 50:
+    st.error("File too large (max 50 MB recommended).")
 
 # Constrain datasize?
+st.divider()
+
 st.subheader("Data size option")
 
 st.radio(
@@ -347,24 +375,3 @@ elif use_sampling == "Use full data":
         st.warning("Full-data mode is selected. This may take a long while to compute.")
     else:
         st.warning("Dataset has less than 10,000 points")
-
-## Metadata
-st.divider()
-st.subheader("Dataset summary")
-
-
-n_obs = len(y)
-n_features = len(feature_names)
-
-col1, col2 = st.columns(2)
-
-col1.metric("Number of observations", n_obs)
-col2.metric("Number of features", n_features)
-
-col3, col4 = st.columns(2)
-col3.metric("Target variable", target_name)
-with col4:
-    st.write("**Feature variables:**")
-    with st.expander(f"{len(feature_names)} features"):
-        for f in feature_names:
-            st.write(f"- {f}")
