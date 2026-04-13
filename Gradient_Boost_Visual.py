@@ -275,7 +275,7 @@ def make_scatter(plot_df, title, axis_min, axis_max):
     ax.set_aspect("equal", adjustable="box")
     ax.set_xlabel("Actual outcome")
     ax.set_ylabel("Predicted outcome")
-    ax.set_title(title)
+    ax.set_title(f"{title} (N = {len(plot_df["y_true"]})")
     ax.text(
         0.03, 0.97,
         f"RMSE = {rmse:.2f}",
@@ -293,19 +293,15 @@ with col_train:
     st.pyplot(make_scatter(plot_df_train, "Train subset", axis_min, axis_max), use_container_width=False)
 
 ## Other buttons
-btn_col1, btn_col2 = st.columns(2)
+st.button(
+    "Show lowest RMSE setting (for the test subset)",
+    on_click=set_best_rmse
+)
 
-with btn_col1:
-    st.button(
-        "Show lowest RMSE setting",
-        on_click=set_best_rmse
-    )
-
-with btn_col2:
-    st.button(
-        "Randomize train/test seed",
-        on_click=randomize_seed
-    )
+st.button(
+    "Randomize train/test seed",
+    on_click=randomize_seed
+)
 
 ## Metadata
 st.divider()
