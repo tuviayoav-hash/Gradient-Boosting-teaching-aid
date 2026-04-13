@@ -40,7 +40,7 @@ def load_user_dataset(uploaded_file):
 
     target_name = df.columns[-1]
     feature_names = list(df.columns[:-1])
-    
+
     y = df.iloc[:, -1]
     X = df.iloc[:, :-1]
 
@@ -65,7 +65,7 @@ def maybe_sample_dataset(X, y, feature_names, max_rows=10000, seed=123):
     idx = rng.choice(len(X), size=max_rows, replace=False)
 
     return X[idx], y[idx]
-    
+
 # Gradient boost algo
 @st.cache_data
 def build_results_table(split_seed: int, X, y) -> pd.DataFrame:
@@ -155,12 +155,9 @@ if "selected_lr" not in st.session_state:
 if "selected_iter" not in st.session_state:
     st.session_state["selected_iter"] = 10
 
-if "sampling_mode" not in st.session_state:
-    st.session_state["sampling_mode"] = "Sample 1,000 rows"
+if "use_sampling" not in st.session_state:
+    st.session_state["use_sampling"] = "Sample data (1K points)"
 
-if "uploaded_file" not in st.session_state:
-        st.session_state["uploaded_file"] = None
-    
 ######################
 ## App itself
 ######################
@@ -175,13 +172,13 @@ st.title("Gradient Boosting Fitting Demo")
 st.markdown(
     """
     Gradient Boosting is a powerful predictive algorithm for structured tabular data. However, it is often treated as a "black box".
-    
+
     This interactive app was built as a teaching aid to help users develop intuition for how gradient boosting behaves, especially how three key parameters - the learning rate, maximum tree depth, and number of iterations - affect generalization and overfitting.
 
     Rather than showing only the RMSE on the test subset, the app plots actual values against predicted values in a scatter plot.
-    
+
     The visual intuition is simple: the closer the points lie to the fixed 45° reference line, the better the model is performing on the test split.
-    
+
     Questions you might explore:
     - How do underfitting and overfitting emerge under different parameter settings?
     - How do learning rate and tree depth interact?
@@ -189,59 +186,28 @@ st.markdown(
     """
 )
 
+# Read data source from session state (widgets are rendered below the plot)
+uploaded_file = st.session_state.get("csv_upload")
 
-# Upload CSV (if the user wants, if not default is the california prices dataset)
-st.markdown("You can even upload your own dataset!")
-uploaded_file = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"])
-if uploaded_file is not None:
-    file_size_mb = uploaded_file.size / (1024 * 1024)
-    if file_size_mb > 50:
-        st.error("File too large (max 50 MB recommended).")
-        st.stop()
-        
+# Validate file size if a file is present
+if uploaded_file is not None and uploaded_file.size / (1024 * 1024) > 50:
+    uploaded_file = None  # fall back to default; error is shown below near the widget
+
 X, y, feature_names, target_name, error = load_user_dataset(uploaded_file)
 
 if error:
     st.error(error)
     st.stop()
-    
-st.markdown(
-    """
-    Must follow format:
-    - Target variable is the last column
-    - All variables are numeric (for now)
-    - No missing data
-    """
-)
 
-# Constrain datasize?
-st.subheader("Data size option")
-
-use_sampling = st.radio(
-    "Choose computation mode",
-    options=["Sample data (1K points)", "Sample data (10K points)", "Use full data"],
-    index=0,
-    horizontal=True
-)
-
-st.caption("Using full data may take much longer to compute, especially for large datasets.")
+# Read sampling mode from session state (widget is rendered below the plot)
+use_sampling = st.session_state.get("use_sampling", "Sample data (1K points)")
 
 if use_sampling == "Sample data (1K points)":
     X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=1000, seed=123)
-elif use_sampling == "Sample data (10k points)":
+elif use_sampling == "Sample data (10K points)":
     X_model, y_model = maybe_sample_dataset(X, y, feature_names, max_rows=10000, seed=123)
-    if len(X) > 1000:
-        st.warning("10K sampling is selected. This may take a while to compute.")
-    else:
-        st.warning("Dataset has less than 1,000 points")
 else:
     X_model, y_model = X, y
-    if len(X) > 10000:
-        st.warning("Full-data mode is selected. This may take a long while to compute.")
-    else:
-        st.warning("Dataset has less than 10,000 points")
-
-
 
 # build results
 df = build_results_table(st.session_state["split_seed"], X_model, y_model)
@@ -257,13 +223,6 @@ axis_min = global_min - margin
 axis_max = global_max + margin
 
 # Controls
-if "selected_depth" not in st.session_state:
-    st.session_state["selected_depth"] = 3
-if "selected_lr" not in st.session_state:
-    st.session_state["selected_lr"] = 0.1
-if "selected_iter" not in st.session_state:
-    st.session_state["selected_iter"] = 10
-    
 st.subheader("Controls")
 ctrl_depth, ctrl_lr, ctrl_iter = st.columns(3)
 with ctrl_depth:
@@ -287,7 +246,7 @@ with ctrl_iter:
         key="selected_iter",
         horizontal=True
     )
-    
+
 plot_df = df[
     (df["learning_rate"] == st.session_state["selected_lr"]) &
     (df["max_depth"] == st.session_state["selected_depth"]) &
@@ -348,7 +307,46 @@ with btn_col2:
         on_click=randomize_seed
     )
 
+## Data source controls (below the scatterplot)
+st.divider()
 
+# Upload CSV (if the user wants, if not default is the california prices dataset)
+st.markdown("You can even upload your own dataset!")
+_uploaded = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"], key="csv_upload")
+if _uploaded is not None and _uploaded.size / (1024 * 1024) > 50:
+    st.error("File too large (max 50 MB recommended).")
+
+st.markdown(
+    """
+    Must follow format:
+    - Target variable is the last column
+    - All variables are numeric (for now)
+    - No missing data
+    """
+)
+
+# Constrain datasize?
+st.subheader("Data size option")
+
+st.radio(
+    "Choose computation mode",
+    options=["Sample data (1K points)", "Sample data (10K points)", "Use full data"],
+    key="use_sampling",
+    horizontal=True
+)
+
+st.caption("Using full data may take much longer to compute, especially for large datasets.")
+
+if use_sampling == "Sample data (10K points)":
+    if len(X) > 1000:
+        st.warning("10K sampling is selected. This may take a while to compute.")
+    else:
+        st.warning("Dataset has less than 1,000 points")
+elif use_sampling == "Use full data":
+    if len(X) > 10000:
+        st.warning("Full-data mode is selected. This may take a long while to compute.")
+    else:
+        st.warning("Dataset has less than 10,000 points")
 
 ## Metadata
 st.divider()
