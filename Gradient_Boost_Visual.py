@@ -275,7 +275,7 @@ def make_scatter(plot_df, title, axis_min, axis_max):
     ax.set_aspect("equal", adjustable="box")
     ax.set_xlabel("Actual outcome")
     ax.set_ylabel("Predicted outcome")
-    ax.set_title(f"{title} (N = {len(plot_df["y_true"]})")
+    ax.set_title(f"{title} (N = {len(plot_df["y_true"])})")
     ax.text(
         0.03, 0.97,
         f"RMSE = {rmse:.2f}",
