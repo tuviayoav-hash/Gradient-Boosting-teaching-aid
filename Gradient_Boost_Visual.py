@@ -319,11 +319,10 @@ else:
     name_data = uploaded_file.name
 
 metric("Name of dataset", name_data)
-col2.metric("Number of obs. in whole data", )
 
-col3, col4 = st.columns(2)
-col3.metric("Target variable", target_name)
-with col4:
+col1, col2 = st.columns(2)
+col1.metric("Target variable", target_name)
+with col2:
     st.write("**Feature variables:**")
     with st.expander(f"{len(feature_names)} features"):
         for f in feature_names:
