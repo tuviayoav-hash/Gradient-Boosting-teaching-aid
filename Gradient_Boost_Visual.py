@@ -284,12 +284,7 @@ with col_train:
     st.pyplot(make_scatter(plot_df_train, "Train subset", axis_min, axis_max), use_container_width=False)
 
 ## Other buttons
-st.button(
-    """
-    Show lowest RMSE setting
-    
-    (for the test subset)
-    """,
+st.button("Show lowest RMSE setting",
     on_click=set_best_rmse
 )
 
