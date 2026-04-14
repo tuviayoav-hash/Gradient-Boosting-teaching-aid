@@ -1,8 +1,7 @@
-import io
 import random
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.graph_objects as plotly
 import streamlit as st
 
 from sklearn.datasets import fetch_california_housing
@@ -258,30 +257,45 @@ plot_df_train = df[selected_mask & (df["subset"] == "train")].copy()
 
 def make_scatter(plot_df, title, axis_min, axis_max):
     rmse = mean_squared_error(plot_df["y_true"], plot_df["y_pred"]) ** 0.5
-    fig, ax = plt.subplots(figsize=(3.6, 2.7), dpi=200)
-    ax.scatter(plot_df["y_true"], plot_df["y_pred"], alpha=0.7)
-    ax.plot([axis_min, axis_max], [axis_min, axis_max], linestyle="--")
-    ax.set_xlim(axis_min, axis_max)
-    ax.set_ylim(axis_min, axis_max)
-    ax.set_aspect("equal", adjustable="box")
-    ax.set_xlabel("Actual outcome")
-    ax.set_ylabel("Predicted outcome")
-    ax.set_title(f"{title} (N = {len(plot_df["y_true"])})")
-    ax.text(
-        0.03, 0.97,
-        f"RMSE = {rmse:.2f}",
-        transform=ax.transAxes,
-        verticalalignment="top",
-        bbox=dict(boxstyle="round", facecolor="white", alpha=0.8)
+
+    fig = plotly.Figure()
+
+    fig.add_trace(plotly.Scatter(
+        x=plot_df["y_true"],
+        y=plot_df["y_pred"],
+        mode="markers",
+        marker=dict(opacity=0.5, size=5),
+        name="Predictions",
+        hovertemplate="Actual: %{x:.2f}<br>Predicted: %{y:.2f}<extra></extra>"
+    ))
+
+    fig.add_trace(plotly.Scatter(
+        x=[axis_min, axis_max],
+        y=[axis_min, axis_max],
+        mode="lines",
+        line=dict(dash="dash", color="gray", width=1.5),
+        name="Perfect fit",
+        hoverinfo="skip"
+    ))
+
+    fig.update_layout(
+        title=dict(text=f"{title} — N={len(plot_df)}   RMSE={rmse:.2f}", font=dict(size=14)),
+        xaxis_title="Actual outcome",
+        yaxis_title="Predicted outcome",
+        xaxis=dict(range=[axis_min, axis_max]),
+        yaxis=dict(range=[axis_min, axis_max], scaleanchor="x", scaleratio=1),
+        height=450,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(t=80, b=50, l=60, r=20),
     )
-    fig.tight_layout()
+
     return fig
 
 col_test, col_train = st.columns(2)
 with col_test:
-    st.pyplot(make_scatter(plot_df_test,  "Test subset",  axis_min, axis_max), use_container_width=False)
+    st.plotly_chart(make_scatter(plot_df_test,  "Test subset",  axis_min, axis_max), use_container_width=True)
 with col_train:
-    st.pyplot(make_scatter(plot_df_train, "Train subset", axis_min, axis_max), use_container_width=False)
+    st.plotly_chart(make_scatter(plot_df_train, "Train subset", axis_min, axis_max), use_container_width=True)
 
 ## Other buttons
 st.button("Show lowest RMSE setting",
