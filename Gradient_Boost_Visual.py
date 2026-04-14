@@ -232,7 +232,7 @@ axis_max = global_max + margin
 st.markdown(
     """
     <style>
-    div[data-testid="stRadio"] > div { gap: 0.2rem; }
+    div[data-testid="stRadio"] label p { font-size: 0.85em !important; }
     </style>
     """,
     unsafe_allow_html=True
@@ -271,8 +271,8 @@ selected_mask = (
 plot_df_test  = df[selected_mask & (df["subset"] == "test")].copy()
 plot_df_train = df[selected_mask & (df["subset"] == "train")].copy()
 
-st.caption(
-    f"Max depth: {st.session_state['selected_depth']} · "
+st.info(
+    f"**Current settings —** Max depth: {st.session_state['selected_depth']} · "
     f"Learning rate: {st.session_state['selected_lr']} · "
     f"Iterations: {st.session_state['selected_iter']}"
 )
