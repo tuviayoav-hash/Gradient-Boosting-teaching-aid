@@ -171,6 +171,7 @@ if "use_sampling" not in st.session_state:
 
 st.set_page_config(
     page_title="Gradient Boosting Fitting Demo",
+    page_icon="📈",
     layout="wide"
 )
 
@@ -261,8 +262,9 @@ selected_mask = (
 plot_df_test  = df[selected_mask & (df["subset"] == "test")].copy()
 plot_df_train = df[selected_mask & (df["subset"] == "train")].copy()
 
-def make_scatter(plot_df, title, axis_min, axis_max):
+def make_scatter(plot_df, title, color, axis_min, axis_max):
     rmse = mean_squared_error(plot_df["y_true"], plot_df["y_pred"]) ** 0.5
+    n = len(plot_df)
 
     fig = plotly.Figure()
 
@@ -270,7 +272,7 @@ def make_scatter(plot_df, title, axis_min, axis_max):
         x=plot_df["y_true"],
         y=plot_df["y_pred"],
         mode="markers",
-        marker=dict(opacity=0.5, size=5),
+        marker=dict(color=color, opacity=0.5, size=5),
         name="Predictions",
         hovertemplate="Actual: %{x:.2f}<br>Predicted: %{y:.2f}<extra></extra>"
     ))
@@ -285,7 +287,8 @@ def make_scatter(plot_df, title, axis_min, axis_max):
     ))
 
     fig.update_layout(
-        title=dict(text=f"{title} — N={len(plot_df)}   RMSE={rmse:.2f}", font=dict(size=20)),
+        template="simple_white",
+        title=dict(text=title, font=dict(size=20)),
         xaxis_title="Actual outcome",
         yaxis_title="Predicted outcome",
         xaxis=dict(range=[axis_min, axis_max]),
@@ -295,23 +298,24 @@ def make_scatter(plot_df, title, axis_min, axis_max):
         margin=dict(t=80, b=50, l=60, r=20),
     )
 
-    return fig
+    return fig, rmse, n
 
 col_test, col_train = st.columns(2)
 with col_test:
-    st.plotly_chart(make_scatter(plot_df_test,  "Test subset",  axis_min, axis_max), use_container_width=True)
+    fig, rmse, n = make_scatter(plot_df_test,  "Test subset",  "#2E86AB", axis_min, axis_max)
+    st.plotly_chart(fig, use_container_width=True)
+    st.metric("Test", f"N={n}  ·  RMSE={rmse:.2f}")
 with col_train:
-    st.plotly_chart(make_scatter(plot_df_train, "Train subset", axis_min, axis_max), use_container_width=True)
+    fig, rmse, n = make_scatter(plot_df_train, "Train subset", "#E07B39", axis_min, axis_max)
+    st.plotly_chart(fig, use_container_width=True)
+    st.metric("Train", f"N={n}  ·  RMSE={rmse:.2f}")
 
 ## Other buttons
-st.button("Show lowest RMSE setting",
-    on_click=set_best_rmse
-)
-
-st.button(
-    "Randomize train/test seed",
-    on_click=randomize_seed
-)
+col_a, col_b = st.columns(2)
+with col_a:
+    st.button("Show lowest RMSE setting", on_click=set_best_rmse, use_container_width=True)
+with col_b:
+    st.button("Randomize train/test seed", on_click=randomize_seed, use_container_width=True)
 
 with st.expander("Data size option"):
     st.radio(
