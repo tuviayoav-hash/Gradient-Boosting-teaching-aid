@@ -176,15 +176,21 @@ st.set_page_config(
 
 st.title("Gradient Boosting Fitting Demo")
 
-st.markdown(
-    """
-    Gradient Boosting is a powerful predictive algorithm for structured tabular data. However, it is often treated as a "black box".
+with st.expander("About this app", expanded=True):
+    st.markdown(
+        """
+        Gradient Boosting is a powerful predictive algorithm for structured tabular data. However, it is often treated as a "black box".
 
-    This app was built as a teaching aid to help develop intuition for how the model behaves, specifically how three key parameters affect generalization and overfitting.
+        This app was built as a teaching aid to help develop intuition for how the model behaves, specifically how three key parameters affect generalization and overfitting.
 
-    Rather than showing only the RMSE, the app plots the actual values against the predicted ones. The visual intuition is simple: the closer the points lie to the fixed 45° line, the better the model is performing.
-    """
-)
+        Rather than showing only the RMSE, the app plots the actual values against the predicted ones. The visual intuition is simple: the closer the points lie to the fixed 45° line, the better the model is performing.
+
+        **Questions you might explore:**
+        - How do underfitting and overfitting emerge under different parameter settings?
+        - How do learning rate and tree depth interact?
+        - Can increasing the number of iterations eventually hurt performance?
+        """
+    )
 
 # Read data source from session state (widgets are rendered below the plot)
 uploaded_file = st.session_state.get("csv_upload")
@@ -307,77 +313,50 @@ st.button(
     on_click=randomize_seed
 )
 
-## Some text
-st.divider()
-st.markdown(
-    """
-    Questions you might explore:
-    - How do underfitting and overfitting emerge under different parameter settings?
-    - How do learning rate and tree depth interact?
-    - Can increasing the number of iterations eventually hurt performance?
-    """
-)
-## Metadata
-st.divider()
-st.subheader("Dataset summary")
+with st.expander("Data size option"):
+    st.radio(
+        "Choose computation mode",
+        options=["Sample data (1K points)", "Sample data (10K points)", "Use full data"],
+        key="use_sampling",
+        horizontal=True
+    )
+    st.caption(f"The full dataset includes {len(y)} observations. Using full data may take much longer to compute, especially for large datasets.")
+    if use_sampling == "Sample data (10K points)":
+        if len(X) > 1000:
+            st.warning("10K sampling is selected. This may take a while to compute.")
+        else:
+            st.warning("Dataset has less than 1,000 points")
+    elif use_sampling == "Use full data":
+        if len(X) > 10000:
+            st.warning("Full-data mode is selected. This may take a long while to compute.")
+        else:
+            st.warning("Dataset has less than 10,000 points")
 
-if uploaded_file is None:
-    name_data = "California Housing Dataset (from sklearn)"
-else:
-    name_data = uploaded_file.name
-
-st.metric("Name of dataset", name_data)
-
-col1, col2 = st.columns(2)
-col1.metric("Target variable", target_name)
-with col2:
-    st.write("**Feature variables:**")
-    with st.expander(f"{len(feature_names)} features"):
-        for f in feature_names:
-            st.write(f"- {f}")
-            
-## Data source controls
-st.divider()
-
-# Upload CSV (if the user wants, if not default is the california prices dataset)
-st.subheader("Upload another table")
-st.markdown(
-    """
-    Done with the default dataset? Upload you own!
-
-    Must follow format:
-    - CSV file
-    - Target variable is the last column
-    - All variables are numeric (for now)
-    - No missing data
-    """
-           )
-_uploaded = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"], key="csv_upload")
-if _uploaded is not None and _uploaded.size / (1024 * 1024) > 50:
-    st.error("File too large (max 50 MB recommended).")
-
-# Constrain datasize?
-st.divider()
-
-st.subheader("Data size option")
-
-st.radio(
-    "Choose computation mode",
-    options=["Sample data (1K points)", "Sample data (10K points)", "Use full data"],
-    key="use_sampling",
-    horizontal=True
-)
-
-st.caption(f"The full dataset includes {len(y)} observations.")
-st.caption("Using full data may take much longer to compute, especially for large datasets.")
-
-if use_sampling == "Sample data (10K points)":
-    if len(X) > 1000:
-        st.warning("10K sampling is selected. This may take a while to compute.")
+with st.expander("Dataset summary"):
+    if uploaded_file is None:
+        name_data = "California Housing Dataset (from sklearn)"
     else:
-        st.warning("Dataset has less than 1,000 points")
-elif use_sampling == "Use full data":
-    if len(X) > 10000:
-        st.warning("Full-data mode is selected. This may take a long while to compute.")
-    else:
-        st.warning("Dataset has less than 10,000 points")
+        name_data = uploaded_file.name
+
+    st.metric("Dataset", name_data)
+    st.metric("Target variable", target_name)
+    st.metric("Number of features", len(feature_names))
+
+    with st.expander("Feature list"):
+        st.write("  \n".join(f"- {f}" for f in feature_names))
+
+with st.expander("Upload another table"):
+    st.markdown(
+        """
+        Done with the default dataset? Upload your own!
+
+        Must follow format:
+        - CSV file
+        - Target variable is the last column
+        - All variables are numeric (for now)
+        - No missing data
+        """
+    )
+    _uploaded = st.file_uploader("Upload CSV (max 50 MB recommended)", type=["csv"], key="csv_upload")
+    if _uploaded is not None and _uploaded.size / (1024 * 1024) > 50:
+        st.error("File too large (max 50 MB recommended).")
