@@ -329,6 +329,7 @@ with col_a:
     st.button("Show lowest RMSE setting", on_click=set_best_rmse, use_container_width=True)
 with col_b:
     st.button("Randomize train/test seed", on_click=randomize_seed, use_container_width=True)
+    st.caption(f"Current seed: {st.session_state['split_seed']}")
 
 with st.expander("Data size option"):
     st.radio(
