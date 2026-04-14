@@ -151,7 +151,7 @@ def randomize_seed():
 
 # Session state defaults:
 if "split_seed" not in st.session_state:
-    st.session_state["split_seed"] = 42
+    st.session_state["split_seed"] = 516
 
 if "selected_depth" not in st.session_state:
     st.session_state["selected_depth"] = 3
@@ -316,12 +316,12 @@ with col_test:
     with st.expander("Test subset", expanded=True):
         fig, rmse, n = make_scatter(plot_df_test,  "#2E86AB", axis_min, axis_max)
         st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
-        st.markdown(f"<p style='font-size:1.6rem;white-space:nowrap'>RMSE: <b>{rmse:.2f}</b> &nbsp;·&nbsp; N: {n}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:1.6rem;white-space:nowrap'>RMSE: <b>{rmse:.3f}</b> &nbsp;·&nbsp; N: {n}</p>", unsafe_allow_html=True)
 with col_train:
     with st.expander("Train subset", expanded=True):
         fig, rmse, n = make_scatter(plot_df_train, "#E07B39", axis_min, axis_max)
         st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
-        st.markdown(f"<p style='font-size:1.6rem;white-space:nowrap'>RMSE: <b>{rmse:.2f}</b> &nbsp;·&nbsp; N: {n}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:1.6rem;white-space:nowrap'>RMSE: <b>{rmse:.3f}</b> &nbsp;·&nbsp; N: {n}</p>", unsafe_allow_html=True)
 
 ## Other buttons
 col_a, col_b = st.columns(2)
@@ -329,7 +329,6 @@ with col_a:
     st.button("Show lowest RMSE setting", on_click=set_best_rmse, use_container_width=True)
 with col_b:
     st.button("Randomize train/test seed", on_click=randomize_seed, use_container_width=True)
-    st.caption(f"Current seed: {st.session_state['split_seed']}")
 
 with st.expander("Data size option"):
     st.radio(
