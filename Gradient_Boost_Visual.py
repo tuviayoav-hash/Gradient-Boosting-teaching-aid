@@ -218,7 +218,7 @@ global_min = min(df["y_true"].min(), df["y_pred"].min())
 global_max = max(df["y_true"].max(), df["y_pred"].max())
 
 # Add a small margin so points are not on the edge
-margin = 0.05 * (global_max - global_min)
+margin = 0.01 * (global_max - global_min)
 axis_min = global_min - margin
 axis_max = global_max + margin
 
