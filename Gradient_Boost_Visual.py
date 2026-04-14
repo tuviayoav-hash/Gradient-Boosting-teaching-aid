@@ -177,7 +177,7 @@ st.set_page_config(
 
 st.header("Gradient Boosting Fitting Demo")
 
-with st.expander("About this app", expanded=True):
+with st.expander("About this app", expanded=False):
     st.markdown(
         """
         Gradient Boosting is a powerful predictive algorithm for structured tabular data. However, it is often treated as a "black box".
@@ -253,7 +253,8 @@ with st.expander("Controls", expanded=True):
             "Learning rate",
             options=LEARNING_RATES,
             key="selected_lr",
-            horizontal=True
+            horizontal=True,
+            format_func=lambda x: f"{int(x * 100)}%"
         )
     with ctrl_iter:
         selected_iter = st.radio(
@@ -304,7 +305,7 @@ def make_scatter(plot_df, color, axis_min, axis_max):
         yaxis=dict(range=[axis_min, axis_max], scaleanchor="x", scaleratio=1),
         height=450,
         dragmode=False,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5),
         margin=dict(t=40, b=50, l=60, r=20),
     )
 
