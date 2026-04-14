@@ -305,7 +305,7 @@ def make_scatter(plot_df, color, axis_min, axis_max):
         yaxis=dict(range=[axis_min, axis_max], scaleanchor="x", scaleratio=1),
         height=450,
         dragmode=False,
-        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5),
+        legend=dict(x=0.98, y=0.05, xanchor="right", yanchor="bottom", bgcolor="rgba(255,255,255,0.8)"),
         margin=dict(t=40, b=50, l=60, r=20),
     )
 
