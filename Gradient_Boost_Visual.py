@@ -314,12 +314,12 @@ with col_test:
     with st.expander("Test subset", expanded=True):
         fig, rmse, n = make_scatter(plot_df_test,  "#2E86AB", axis_min, axis_max)
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown(f"RMSE: **{rmse:.2f}** &nbsp;·&nbsp; N: {n}")
+        st.markdown(f"<p style='font-size:1.2rem;white-space:nowrap'>RMSE: <b>{rmse:.2f}</b> &nbsp;·&nbsp; N: {n}</p>", unsafe_allow_html=True)
 with col_train:
     with st.expander("Train subset", expanded=True):
         fig, rmse, n = make_scatter(plot_df_train, "#E07B39", axis_min, axis_max)
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown(f"RMSE: **{rmse:.2f}** &nbsp;·&nbsp; N: {n}")
+        st.markdown(f"<p style='font-size:1.2rem;white-space:nowrap'>RMSE: <b>{rmse:.2f}</b> &nbsp;·&nbsp; N: {n}</p>", unsafe_allow_html=True)
 
 ## Other buttons
 col_a, col_b = st.columns(2)
