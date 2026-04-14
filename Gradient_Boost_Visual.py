@@ -174,7 +174,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Gradient Boosting Fitting Demo")
+st.header("Gradient Boosting Fitting Demo")
 
 with st.expander("About this app", expanded=True):
     st.markdown(
@@ -285,7 +285,7 @@ def make_scatter(plot_df, title, axis_min, axis_max):
     ))
 
     fig.update_layout(
-        title=dict(text=f"{title} — N={len(plot_df)}   RMSE={rmse:.2f}", font=dict(size=14)),
+        title=dict(text=f"{title} — N={len(plot_df)}   RMSE={rmse:.2f}", font=dict(size=20)),
         xaxis_title="Actual outcome",
         yaxis_title="Predicted outcome",
         xaxis=dict(range=[axis_min, axis_max]),
