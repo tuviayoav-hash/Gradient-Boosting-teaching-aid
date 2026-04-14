@@ -272,7 +272,7 @@ plot_df_test  = df[selected_mask & (df["subset"] == "test")].copy()
 plot_df_train = df[selected_mask & (df["subset"] == "train")].copy()
 
 
-def make_scatter(plot_df, title, color, axis_min, axis_max):
+def make_scatter(plot_df, color, axis_min, axis_max):
     rmse = mean_squared_error(plot_df["y_true"], plot_df["y_pred"]) ** 0.5
     n = len(plot_df)
 
@@ -298,14 +298,13 @@ def make_scatter(plot_df, title, color, axis_min, axis_max):
 
     fig.update_layout(
         template="simple_white",
-        title=dict(text=title, font=dict(size=20)),
         xaxis_title="Actual outcome",
         yaxis_title="Predicted outcome",
         xaxis=dict(range=[axis_min, axis_max]),
         yaxis=dict(range=[axis_min, axis_max], scaleanchor="x", scaleratio=1),
         height=450,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(t=80, b=50, l=60, r=20),
+        margin=dict(t=40, b=50, l=60, r=20),
     )
 
     return fig, rmse, n
@@ -313,14 +312,14 @@ def make_scatter(plot_df, title, color, axis_min, axis_max):
 col_test, col_train = st.columns(2)
 with col_test:
     with st.expander("Test subset", expanded=True):
-        fig, rmse, n = make_scatter(plot_df_test,  "Test subset",  "#2E86AB", axis_min, axis_max)
+        fig, rmse, n = make_scatter(plot_df_test,  "#2E86AB", axis_min, axis_max)
         st.plotly_chart(fig, use_container_width=True)
-        st.metric("Test", f"N={n}  ·  RMSE={rmse:.2f}")
+        st.markdown(f"RMSE: **{rmse:.2f}** &nbsp;·&nbsp; N: {n}")
 with col_train:
     with st.expander("Train subset", expanded=True):
-        fig, rmse, n = make_scatter(plot_df_train, "Train subset", "#E07B39", axis_min, axis_max)
+        fig, rmse, n = make_scatter(plot_df_train, "#E07B39", axis_min, axis_max)
         st.plotly_chart(fig, use_container_width=True)
-        st.metric("Train", f"N={n}  ·  RMSE={rmse:.2f}")
+        st.markdown(f"RMSE: **{rmse:.2f}** &nbsp;·&nbsp; N: {n}")
 
 ## Other buttons
 col_a, col_b = st.columns(2)
