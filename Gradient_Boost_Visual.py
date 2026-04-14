@@ -229,30 +229,39 @@ margin = 0.01 * (global_max - global_min)
 axis_min = global_min - margin
 axis_max = global_max + margin
 
+st.markdown(
+    """
+    <style>
+    div[data-testid="stRadio"] > div { gap: 0.2rem; }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Controls
-st.subheader("Controls")
-ctrl_depth, ctrl_lr, ctrl_iter = st.columns(3)
-with ctrl_depth:
-    selected_depth = st.radio(
-        "Max depth",
-        options=MAX_DEPTHS,
-        key="selected_depth",
-        horizontal=True
-    )
-with ctrl_lr:
-    selected_lr = st.radio(
-        "Learning rate",
-        options=LEARNING_RATES,
-        key="selected_lr",
-        horizontal=True
-    )
-with ctrl_iter:
-    selected_iter = st.radio(
-        "Number of iterations",
-        options=ITERATION_POINTS,
-        key="selected_iter",
-        horizontal=True
-    )
+with st.expander("Controls", expanded=True):
+    ctrl_depth, ctrl_lr, ctrl_iter = st.columns(3)
+    with ctrl_depth:
+        selected_depth = st.radio(
+            "Max depth",
+            options=MAX_DEPTHS,
+            key="selected_depth",
+            horizontal=True
+        )
+    with ctrl_lr:
+        selected_lr = st.radio(
+            "Learning rate",
+            options=LEARNING_RATES,
+            key="selected_lr",
+            horizontal=True
+        )
+    with ctrl_iter:
+        selected_iter = st.radio(
+            "Number of iterations",
+            options=ITERATION_POINTS,
+            key="selected_iter",
+            horizontal=True
+        )
 
 selected_mask = (
     (df["learning_rate"] == st.session_state["selected_lr"]) &
@@ -261,6 +270,12 @@ selected_mask = (
 )
 plot_df_test  = df[selected_mask & (df["subset"] == "test")].copy()
 plot_df_train = df[selected_mask & (df["subset"] == "train")].copy()
+
+st.caption(
+    f"Max depth: {st.session_state['selected_depth']} · "
+    f"Learning rate: {st.session_state['selected_lr']} · "
+    f"Iterations: {st.session_state['selected_iter']}"
+)
 
 def make_scatter(plot_df, title, color, axis_min, axis_max):
     rmse = mean_squared_error(plot_df["y_true"], plot_df["y_pred"]) ** 0.5
@@ -302,13 +317,15 @@ def make_scatter(plot_df, title, color, axis_min, axis_max):
 
 col_test, col_train = st.columns(2)
 with col_test:
-    fig, rmse, n = make_scatter(plot_df_test,  "Test subset",  "#2E86AB", axis_min, axis_max)
-    st.plotly_chart(fig, use_container_width=True)
-    st.metric("Test", f"N={n}  ·  RMSE={rmse:.2f}")
+    with st.expander("Test subset", expanded=True):
+        fig, rmse, n = make_scatter(plot_df_test,  "Test subset",  "#2E86AB", axis_min, axis_max)
+        st.plotly_chart(fig, use_container_width=True)
+        st.metric("Test", f"N={n}  ·  RMSE={rmse:.2f}")
 with col_train:
-    fig, rmse, n = make_scatter(plot_df_train, "Train subset", "#E07B39", axis_min, axis_max)
-    st.plotly_chart(fig, use_container_width=True)
-    st.metric("Train", f"N={n}  ·  RMSE={rmse:.2f}")
+    with st.expander("Train subset", expanded=True):
+        fig, rmse, n = make_scatter(plot_df_train, "Train subset", "#E07B39", axis_min, axis_max)
+        st.plotly_chart(fig, use_container_width=True)
+        st.metric("Train", f"N={n}  ·  RMSE={rmse:.2f}")
 
 ## Other buttons
 col_a, col_b = st.columns(2)
