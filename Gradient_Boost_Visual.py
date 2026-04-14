@@ -10,9 +10,9 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 
 ## Parameters
-LEARNING_RATES = [0.1, 0.3, 0.7, 0.9]
-MAX_DEPTHS = [1, 3, 6, 9]
-ITERATION_POINTS = [1, 5, 10, 50, 100]
+LEARNING_RATES = [0.1, 0.3, 0.5, 0.7]
+MAX_DEPTHS = [1, 3, 5, 7, 9]
+ITERATION_POINTS = [1, 10, 50, 100, 200]
 
 ########################
 # FUNCTIONS
