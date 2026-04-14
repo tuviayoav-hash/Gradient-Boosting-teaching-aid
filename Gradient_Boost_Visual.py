@@ -271,11 +271,6 @@ selected_mask = (
 plot_df_test  = df[selected_mask & (df["subset"] == "test")].copy()
 plot_df_train = df[selected_mask & (df["subset"] == "train")].copy()
 
-st.info(
-    f"**Current settings —** Max depth: {st.session_state['selected_depth']} · "
-    f"Learning rate: {st.session_state['selected_lr']} · "
-    f"Iterations: {st.session_state['selected_iter']}"
-)
 
 def make_scatter(plot_df, title, color, axis_min, axis_max):
     rmse = mean_squared_error(plot_df["y_true"], plot_df["y_pred"]) ** 0.5
