@@ -303,6 +303,7 @@ def make_scatter(plot_df, color, axis_min, axis_max):
         xaxis=dict(range=[axis_min, axis_max]),
         yaxis=dict(range=[axis_min, axis_max], scaleanchor="x", scaleratio=1),
         height=450,
+        dragmode=False,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(t=40, b=50, l=60, r=20),
     )
@@ -313,12 +314,12 @@ col_test, col_train = st.columns(2)
 with col_test:
     with st.expander("Test subset", expanded=True):
         fig, rmse, n = make_scatter(plot_df_test,  "#2E86AB", axis_min, axis_max)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
         st.markdown(f"<p style='font-size:1.6rem;white-space:nowrap'>RMSE: <b>{rmse:.2f}</b> &nbsp;·&nbsp; N: {n}</p>", unsafe_allow_html=True)
 with col_train:
     with st.expander("Train subset", expanded=True):
         fig, rmse, n = make_scatter(plot_df_train, "#E07B39", axis_min, axis_max)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
         st.markdown(f"<p style='font-size:1.6rem;white-space:nowrap'>RMSE: <b>{rmse:.2f}</b> &nbsp;·&nbsp; N: {n}</p>", unsafe_allow_html=True)
 
 ## Other buttons
