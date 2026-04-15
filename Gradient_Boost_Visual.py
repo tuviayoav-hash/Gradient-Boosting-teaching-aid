@@ -232,7 +232,7 @@ axis_max = global_max + margin
 st.markdown(
     """
     <style>
-    div[data-testid="stRadio"] label p { font-size: 0.85em !important; }
+    div[data-testid="stRadio"] label p { font-size: 0.75em !important; }
     </style>
     """,
     unsafe_allow_html=True
